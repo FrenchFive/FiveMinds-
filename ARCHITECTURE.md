@@ -361,6 +361,81 @@ ThreadPoolExecutor(max_workers=max_runners)
 - Results collected via futures
 - Main thread aggregates outcomes
 
+## Tool System
+
+Tools are the only way agents interact with the world. All tool operations are logged, sandboxed, and timeout-bound.
+
+### Tool Contract
+
+Every tool must:
+1. Log all operations
+2. Respect timeout constraints
+3. Return structured results (`ToolResult`)
+4. Handle errors gracefully
+5. Never execute simulated actions
+
+### Repository Tools (`tools/repo.py`)
+
+Provides controlled access to repository operations:
+
+| Tool | Description |
+|------|-------------|
+| `repo.tree(path, max_depth)` | List directory structure |
+| `repo.search(pattern, path)` | Search for content in files |
+| `repo.read(path, start_line, end_line)` | Read file contents |
+| `repo.apply_patch(patch, dry_run)` | Apply unified diff patch |
+| `repo.diff(path1, path2)` | Generate diff between files |
+
+**Security Features:**
+- Path validation prevents directory traversal
+- File size limits prevent memory exhaustion
+- All operations scoped to repository
+
+### Shell Tools (`tools/shell.py`)
+
+Provides controlled shell command execution:
+
+| Tool | Description |
+|------|-------------|
+| `shell.run(command, args, timeout)` | Execute shell command |
+| `shell.which(command)` | Locate a command |
+
+**Security Features:**
+- All commands logged with exit codes
+- Timeout enforcement prevents hanging
+- Output size limits prevent memory issues
+- Command history tracking
+
+### Git Tools (`tools/git.py`)
+
+Provides controlled version control operations:
+
+| Tool | Description |
+|------|-------------|
+| `git.status(short)` | Get repository status |
+| `git.checkout(target, create)` | Checkout branch or files |
+| `git.create_branch(name, start_point)` | Create new branch |
+| `git.merge(branch, no_ff, message)` | Merge branches |
+| `git.diff(target, staged, files)` | Show differences |
+
+**Security Features:**
+- Operations scoped to repository
+- Timeout enforcement
+- Structured output parsing
+
+### Tool Result Structure
+
+All tools return a `ToolResult` object:
+
+```python
+@dataclass
+class ToolResult:
+    success: bool          # Whether operation succeeded
+    output: Any            # Operation output (structured)
+    error: Optional[str]   # Error message if failed
+    logs: List[str]        # Operation logs
+```
+
 ## Extension Points
 
 ### Custom Runners

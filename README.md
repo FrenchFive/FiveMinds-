@@ -354,11 +354,83 @@ FiveMinds-/
 │               ├── headmaster.js
 │               ├── review.js
 │               └── review_detail.js
+│   └── tools/              # Tool system
+│       ├── __init__.py     # Tools package
+│       ├── repo.py         # Repository tools
+│       ├── shell.py        # Shell tools
+│       └── git.py          # Git tools
 ├── example.py              # Example usage
 ├── demo_ui.py              # UI demo script
 ├── requirements.txt        # Dependencies
 ├── README.md              # Documentation
 └── LICENSE                # License file
+```
+
+## Tool System
+
+Five Minds provides a formal tool system for controlled interaction with the environment. All tools are logged, sandboxed, and timeout-bound.
+
+### Repository Tools (`RepoTools`)
+
+```python
+from fiveminds import RepoTools
+
+repo = RepoTools("/path/to/repo")
+
+# List directory structure
+result = repo.tree(".", max_depth=3)
+
+# Search for content in files
+result = repo.search(r"def \w+\(", path="src/")
+
+# Read file contents
+result = repo.read("README.md", start_line=0, end_line=50)
+
+# Apply a unified diff patch
+result = repo.apply_patch(patch_content, dry_run=True)
+
+# Generate diff between files
+result = repo.diff("file1.py", "file2.py")
+```
+
+### Shell Tools (`ShellTools`)
+
+```python
+from fiveminds import ShellTools
+
+shell = ShellTools("/path/to/workdir", timeout=30)
+
+# Execute a command
+result = shell.run("pytest", args=["tests/", "-v"])
+
+# Locate a command
+result = shell.which("python3")
+
+# Get command history
+history = shell.get_command_history()
+```
+
+### Git Tools (`GitTools`)
+
+```python
+from fiveminds import GitTools
+
+git = GitTools("/path/to/repo")
+
+# Get repository status
+result = git.status(short=True)
+
+# Checkout a branch
+result = git.checkout("feature-branch", create=True)
+
+# Create a new branch
+result = git.create_branch("new-feature", start_point="main")
+
+# Merge branches
+result = git.merge("feature-branch", no_ff=True, message="Merge feature")
+
+# Show differences
+result = git.diff(target="HEAD~1", files=["src/main.py"])
 ```
 
 ### Contributing
