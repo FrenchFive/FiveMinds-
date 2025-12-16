@@ -42,7 +42,10 @@ class UIServer:
             template_folder=str(Path(__file__).parent / "templates"),
             static_folder=str(Path(__file__).parent / "static")
         )
-        self.app.config['SECRET_KEY'] = 'fiveminds-secret-key'
+        # Use environment variable for secret key, fallback to generated key
+        import os
+        import secrets
+        self.app.config['SECRET_KEY'] = os.environ.get('FIVEMINDS_SECRET_KEY', secrets.token_hex(32))
         self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
         
         # State management

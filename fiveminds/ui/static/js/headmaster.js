@@ -2,6 +2,12 @@
  * Five Minds UI - HeadMaster Page JavaScript
  */
 
+// Graph rendering constants
+const GRAPH_HEIGHT = 300;
+const GRAPH_PADDING = 40;
+const NODE_RADIUS = 25;
+const DEFAULT_GRAPH_WIDTH = 600;
+
 /**
  * Handle full state update
  */
@@ -122,11 +128,11 @@ function renderTicketGraph(tickets) {
     const svg = document.getElementById('ticket-graph');
     if (!svg || !tickets || tickets.length === 0) return;
     
-    // Calculate positions
-    const width = svg.clientWidth || 600;
-    const height = 300;
-    const padding = 40;
-    const nodeRadius = 25;
+    // Calculate positions using constants
+    const width = svg.clientWidth || DEFAULT_GRAPH_WIDTH;
+    const height = GRAPH_HEIGHT;
+    const padding = GRAPH_PADDING;
+    const nodeRadius = NODE_RADIUS;
     
     // Group tickets by wave (based on dependencies)
     const waves = groupTicketsByWave(tickets);

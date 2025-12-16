@@ -56,7 +56,7 @@ class FiveMinds:
         self.results: Dict[str, RunnerResult] = {}
         self.reviews: Dict[str, ReviewResult] = {}
         
-        # UI server
+        # UI server (lazy import to avoid loading Flask dependencies when UI is disabled)
         self.ui_server = None
         self.enable_ui = enable_ui
         if enable_ui:
