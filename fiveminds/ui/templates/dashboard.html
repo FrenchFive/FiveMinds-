@@ -4,75 +4,132 @@
 
 {% block content %}
 <div class="dashboard">
-    <!-- Welcome Section (shown when idle) -->
-    <div id="welcome-section" class="welcome-section">
-        <div class="welcome-card card">
-            <div class="card-body">
-                <div class="welcome-content">
-                    <div class="welcome-icon">🧠</div>
-                    <h1 class="welcome-title">Welcome to Five Minds</h1>
-                    <p class="welcome-subtitle">Your autonomous AI development assistant</p>
-                    <p class="welcome-description">
-                        Simply describe what you want to accomplish and Five Minds will handle everything 
-                        autonomously - from planning to implementation to testing.
-                    </p>
-                    <div class="welcome-features">
-                        <div class="feature-item">
-                            <span class="feature-icon">🎯</span>
-                            <span>Define your objective</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">🤖</span>
-                            <span>FM works autonomously</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">✅</span>
-                            <span>Get results with commits</span>
-                        </div>
+    <!-- Top Header Bar - Current Task Title -->
+    <div class="top-header-bar">
+        <div class="current-task-header">
+            <div class="task-status-indicator">
+                <span id="task-status-dot" class="status-dot idle"></span>
+            </div>
+            <div class="task-info">
+                <h1 id="current-task-title" class="current-task-title">Waiting for objective...</h1>
+                <p id="headmaster-action" class="headmaster-action">HeadMaster is idle</p>
+            </div>
+            <div class="task-controls">
+                <button id="stop-btn" class="btn btn-danger" style="display: none;">
+                    ⏹ Stop Execution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview Row -->
+    <div class="stats-overview">
+        <div class="stat-box">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+                <span id="stat-status" class="stat-value">Idle</span>
+                <span class="stat-label">Status</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon">🏃</div>
+            <div class="stat-content">
+                <span id="stat-runners" class="stat-value">0</span>
+                <span class="stat-label">Active Runners</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon">🎫</div>
+            <div class="stat-content">
+                <span id="stat-tickets" class="stat-value">0 / 0</span>
+                <span class="stat-label">Tickets Done</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-content">
+                <span id="stat-elapsed" class="stat-value">--:--</span>
+                <span class="stat-label">Elapsed</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+        <!-- Left Column: HeadMaster & Runners -->
+        <div class="left-column">
+            <!-- HeadMaster Activity -->
+            <div class="card headmaster-card">
+                <div class="card-header">
+                    <h2><span class="icon">🎓</span> HeadMaster Activity</h2>
+                    <span id="headmaster-status" class="status-badge idle">Idle</span>
+                </div>
+                <div class="card-body">
+                    <div id="headmaster-reasoning" class="reasoning-log">
+                        <div class="reasoning-empty">HeadMaster is waiting for an objective...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Runners -->
+            <div class="card runners-card">
+                <div class="card-header">
+                    <h2><span class="icon">🏃</span> Runners</h2>
+                    <span id="runners-count" class="badge">0 active</span>
+                </div>
+                <div class="card-body">
+                    <div id="runners-list" class="runners-list">
+                        <div class="runners-empty">No runners active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Objective & Progress -->
+        <div class="right-column">
+            <!-- Current Objective -->
+            <div class="card objective-card">
+                <div class="card-header">
+                    <h2><span class="icon">🎯</span> Current Objective</h2>
+                </div>
+                <div class="card-body">
+                    <p id="objective-description" class="objective-text">No objective set</p>
+                    <div class="objective-meta">
+                        <span id="objective-requirements" class="meta-item">📋 0 requirements</span>
+                        <span id="objective-constraints" class="meta-item">⚠️ 0 constraints</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Timeline -->
+            <div class="card progress-card">
+                <div class="card-header">
+                    <h2><span class="icon">📊</span> Progress</h2>
+                    <span id="progress-count" class="badge">0 events</span>
+                </div>
+                <div class="card-body">
+                    <div id="progress-timeline" class="timeline">
+                        <div class="timeline-empty">Waiting for activity...</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Header Section -->
-    <div class="dashboard-header">
-        <div class="objective-card card">
-            <div class="card-header">
-                <h2><span class="icon">🎯</span> Objective</h2>
-                <div id="objective-controls" class="objective-controls">
-                    <button id="stop-btn" class="btn btn-danger btn-small" style="display: none;">
-                        ⏹ Stop
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <p id="objective-description" class="objective-text">No objective set</p>
-                <div class="objective-meta">
-                    <span id="objective-requirements" class="meta-item">0 requirements</span>
-                    <span id="objective-constraints" class="meta-item">0 constraints</span>
-                </div>
+    <!-- Tickets Section -->
+    <div class="tickets-section card">
+        <div class="card-header">
+            <h2><span class="icon">🎫</span> Tickets</h2>
+            <div class="ticket-stats">
+                <span class="stat completed" id="tickets-completed">0 completed</span>
+                <span class="stat in-progress" id="tickets-in-progress">0 in progress</span>
+                <span class="stat pending" id="tickets-pending">0 pending</span>
+                <span class="stat failed" id="tickets-failed">0 failed</span>
             </div>
         </div>
-
-        <div class="status-card card">
-            <div class="card-header">
-                <h2><span class="icon">📈</span> Status</h2>
-            </div>
-            <div class="card-body">
-                <div class="status-badge-container">
-                    <span id="system-status-badge" class="status-badge idle">Idle</span>
-                </div>
-                <div class="status-details">
-                    <div class="detail-row">
-                        <span class="label">Started:</span>
-                        <span id="start-time" class="value">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Elapsed:</span>
-                        <span id="elapsed-time" class="value">-</span>
-                    </div>
-                </div>
+        <div class="card-body">
+            <div id="tickets-grid" class="tickets-grid">
+                <div class="tickets-empty">No tickets created yet</div>
             </div>
         </div>
     </div>
@@ -81,76 +138,10 @@
     <div id="final-summary-section" class="final-summary-section" style="display: none;">
         <div class="card final-summary-card">
             <div class="card-header">
-                <h2><span class="icon">📋</span> Final Summary</h2>
+                <h2><span class="icon">✅</span> Execution Complete</h2>
             </div>
             <div class="card-body">
                 <pre id="final-summary-content" class="final-summary-content"></pre>
-            </div>
-        </div>
-    </div>
-
-    <!-- Progress Timeline -->
-    <div class="progress-section card">
-        <div class="card-header">
-            <h2><span class="icon">⏱️</span> Progress Timeline</h2>
-            <span id="progress-count" class="badge">0 events</span>
-        </div>
-        <div class="card-body">
-            <div id="progress-timeline" class="timeline">
-                <div class="timeline-empty">No progress events yet</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Metrics Row -->
-    <div class="metrics-row">
-        <div class="metric-card card">
-            <div class="card-header">
-                <h3><span class="icon">💰</span> Cost Usage</h3>
-            </div>
-            <div class="card-body">
-                <div class="metric-grid">
-                    <div class="metric-item">
-                        <span class="metric-value" id="tokens-used">0</span>
-                        <span class="metric-label">Tokens</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-value" id="api-calls">0</span>
-                        <span class="metric-label">API Calls</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-value" id="estimated-cost">$0.00</span>
-                        <span class="metric-label">Est. Cost</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="metric-card card">
-            <div class="card-header">
-                <h3><span class="icon">🏃</span> Active Jobs</h3>
-            </div>
-            <div class="card-body">
-                <div id="active-jobs-list" class="jobs-list">
-                    <div class="jobs-empty">No active jobs</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tickets Overview -->
-    <div class="tickets-section card">
-        <div class="card-header">
-            <h2><span class="icon">🎫</span> Tickets Overview</h2>
-            <div class="ticket-stats">
-                <span class="stat completed" id="tickets-completed">0 completed</span>
-                <span class="stat pending" id="tickets-pending">0 pending</span>
-                <span class="stat failed" id="tickets-failed">0 failed</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div id="tickets-grid" class="tickets-grid">
-                <div class="tickets-empty">No tickets created yet</div>
             </div>
         </div>
     </div>
