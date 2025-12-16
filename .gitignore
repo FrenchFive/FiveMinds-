@@ -49,3 +49,6 @@ htmlcov/
 tmp/
 temp/
 .tmp/
+
+# Setup marker file
+.setup_complete
