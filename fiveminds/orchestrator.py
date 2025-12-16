@@ -5,6 +5,7 @@ Orchestrator - Main system that coordinates HeadMaster, Runners, and Reviewer
 import logging
 import concurrent.futures
 from dataclasses import asdict
+from datetime import datetime
 from typing import List, Dict, Optional
 from pathlib import Path
 
@@ -458,7 +459,7 @@ class FiveMinds:
             "integration": integration_result,
             "success": success,
             "final_summary": final_summary,
-            "completed_at": __import__('datetime').datetime.now().isoformat()
+            "completed_at": datetime.now().isoformat()
         }
         
         # Log the summary

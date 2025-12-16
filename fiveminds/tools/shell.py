@@ -11,7 +11,9 @@ All commands are:
 - Timeout-bound
 """
 
+import json
 import os
+import re
 import shutil
 import subprocess
 import logging
@@ -249,7 +251,6 @@ class ShellTools:
         package_json = self.working_dir / "package.json"
         if package_json.exists():
             try:
-                import json
                 with open(package_json) as f:
                     pkg = json.load(f)
                     if "scripts" in pkg and "test" in pkg["scripts"]:
@@ -344,8 +345,6 @@ class ShellTools:
     def _parse_test_output(self, output: str, framework: str) -> Dict[str, Any]:
         """Parse test output to extract counts."""
         counts = {"total": 0, "passed": 0, "failed": 0, "skipped": 0}
-        
-        import re
         
         if framework == "pytest":
             # pytest output: "5 passed, 2 failed, 1 skipped"

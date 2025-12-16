@@ -5,6 +5,28 @@
 // Update interval for elapsed time
 let elapsedInterval = null;
 
+// Initialize stop button when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) {
+        stopBtn.addEventListener('click', handleStopClick);
+    }
+});
+
+/**
+ * Handle stop button click
+ */
+function handleStopClick() {
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) {
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stopping...';
+    }
+    // Note: The actual stop functionality would need to be implemented via WebSocket
+    // For now, this is a placeholder that shows the UI response
+    console.log('Stop requested');
+}
+
 /**
  * Handle full state update
  */
