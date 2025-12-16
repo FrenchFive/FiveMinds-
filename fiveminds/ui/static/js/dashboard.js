@@ -566,7 +566,7 @@ async function handleObjectiveSubmit(event) {
     const description = form.description.value.trim();
     
     if (!description) {
-        alert('Please enter an objective description');
+        alert('Objective Required: Please describe what you want to accomplish in the "What do you want to accomplish?" field.');
         return;
     }
     
@@ -612,13 +612,17 @@ async function handleObjectiveSubmit(event) {
             hideWelcomeModal();
             console.log('Objective submitted successfully');
         } else {
-            alert('Error: ' + (result.message || 'Failed to submit objective'));
+            const errorMsg = result.message || 'Failed to submit objective. Please try again.';
+            alert('Submission Failed: ' + errorMsg + '\n\nPlease check your input and try again.');
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
     } catch (error) {
         console.error('Error submitting objective:', error);
-        alert('Error submitting objective: ' + error.message);
+        const errorMsg = error.message || 'Unknown error occurred';
+        alert('Connection Error: Unable to submit your objective.\n\n' + 
+              'Details: ' + errorMsg + '\n\n' +
+              'Please check that the server is running and try again.');
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = false;
         submitBtn.textContent = '🚀 Start Five Minds';
