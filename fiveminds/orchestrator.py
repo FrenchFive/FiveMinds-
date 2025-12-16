@@ -35,7 +35,9 @@ class FiveMinds:
     """
 
     def __init__(self, repo_path: str, max_runners: int = 4, enable_ui: bool = False, 
-                 ui_host: str = "127.0.0.1", ui_port: int = 5000):
+                 ui_host: str = "127.0.0.1", ui_port: int = 5000,
+                 user_name: str = "FiveMinds", user_email: str = "fiveminds@localhost",
+                 autonomous: bool = True):
         """
         Initialize the Five Minds system.
 
@@ -45,9 +47,16 @@ class FiveMinds:
             enable_ui: Whether to enable the web UI
             ui_host: Host for UI server
             ui_port: Port for UI server
+            user_name: Git user name for commits
+            user_email: Git user email for commits
+            autonomous: Run in autonomous mode (minimal user interaction)
         """
         self.repo_path = Path(repo_path)
         self.max_runners = max_runners
+        self.user_name = user_name
+        self.user_email = user_email
+        self.autonomous = autonomous
+        self._stop_requested = False
         
         self.headmaster = HeadMaster(str(self.repo_path))
         self.reviewer: Optional[Reviewer] = None
@@ -65,8 +74,14 @@ class FiveMinds:
         
         logger.info(f"Five Minds initialized for repository: {repo_path}")
         logger.info(f"Maximum parallel runners: {max_runners}")
+        logger.info(f"Autonomous mode: {autonomous}")
         if enable_ui:
             logger.info(f"UI enabled at http://{ui_host}:{ui_port}")
+    
+    def stop(self):
+        """Request to stop the execution."""
+        self._stop_requested = True
+        logger.info("Stop requested")
 
     def _ticket_to_dict(self, ticket: Ticket) -> dict:
         """Convert ticket to dictionary for UI."""
@@ -228,6 +243,11 @@ class FiveMinds:
             waves: Dictionary mapping wave names to lists of tickets
         """
         for wave_name, tickets in waves.items():
+            # Check if stop was requested
+            if self._stop_requested:
+                logger.info("Execution stopped by user request")
+                break
+                
             logger.info(f"\nExecuting {wave_name}: {len(tickets)} ticket(s)")
             
             if self.ui_server:
@@ -235,10 +255,15 @@ class FiveMinds:
             
             # Execute tickets in this wave in parallel
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_runners) as executor:
-                # Create runners
+                # Create runners with user credentials
                 futures = {}
                 for idx, ticket in enumerate(tickets):
-                    runner = Runner(f"R{idx+1}", str(self.repo_path))
+                    runner = Runner(
+                        f"R{idx+1}", 
+                        str(self.repo_path),
+                        user_name=self.user_name,
+                        user_email=self.user_email
+                    )
                     future = executor.submit(runner.execute_ticket, ticket)
                     futures[future] = (ticket, runner)
                     
@@ -254,6 +279,14 @@ class FiveMinds:
                         result = future.result()
                         self.results[ticket.id] = result
                         logger.info(f"  ✓ {ticket.id} completed by {runner.runner_id}")
+                        
+                        # In autonomous mode, commit changes after successful execution
+                        if self.autonomous and result.success:
+                            commit_result = runner.commit_changes(ticket)
+                            if commit_result.get("success"):
+                                logger.info(f"  ✓ Changes committed for {ticket.id}")
+                            else:
+                                logger.warning(f"  ⚠ Commit failed for {ticket.id}: {commit_result.get('error')}")
                         
                         # Update UI
                         if self.ui_server:
@@ -384,6 +417,34 @@ class FiveMinds:
         failed = sum(1 for t in self.tickets if t.status == TicketStatus.FAILED)
         pending = sum(1 for t in self.tickets if t.status == TicketStatus.PENDING)
         
+        success = integration_result["integration_status"] == "success" and review_summary["approval_rate"] >= 0.8
+        
+        # Generate a human-readable final summary
+        final_summary_lines = [
+            "=" * 60,
+            "🧠 FIVE MINDS EXECUTION SUMMARY",
+            "=" * 60,
+            "",
+            f"📋 Objective: {objective.description}",
+            "",
+            "📊 Results:",
+            f"   • Tickets completed: {completed}/{total_tickets}",
+            f"   • Tickets failed: {failed}",
+            f"   • Tickets pending: {pending}",
+            "",
+            f"🔍 Reviews:",
+            f"   • Approved: {review_summary['approved']}/{review_summary['total_reviews']}",
+            f"   • Approval rate: {review_summary['approval_rate']:.1%}",
+            f"   • Average alignment: {review_summary['average_alignment_score']:.1%}",
+            "",
+            f"🔧 Integration: {integration_result['integration_status']}",
+            f"   • Patches applied: {integration_result.get('patches_applied', 0)}",
+            "",
+            f"✅ Overall Status: {'SUCCESS' if success else 'NEEDS WORK'}",
+            "=" * 60
+        ]
+        final_summary = "\n".join(final_summary_lines)
+        
         summary = {
             "objective": objective.description,
             "repository": str(self.repo_path),
@@ -395,19 +456,18 @@ class FiveMinds:
             },
             "review": review_summary,
             "integration": integration_result,
-            "success": integration_result["integration_status"] == "success" and review_summary["approval_rate"] >= 0.8
+            "success": success,
+            "final_summary": final_summary,
+            "completed_at": __import__('datetime').datetime.now().isoformat()
         }
         
-        logger.info("\n" + "="*60)
-        logger.info("SUMMARY")
-        logger.info("="*60)
-        logger.info(f"Objective: {objective.description}")
-        logger.info(f"Tickets: {completed}/{total_tickets} completed, {failed} failed, {pending} pending")
-        logger.info(f"Reviews: {review_summary['approved']}/{review_summary['total_reviews']} approved")
-        logger.info(f"Alignment: {review_summary['average_alignment_score']:.2f}")
-        logger.info(f"Integration: {integration_result['integration_status']}")
-        logger.info(f"Overall: {'SUCCESS' if summary['success'] else 'NEEDS WORK'}")
-        logger.info("="*60)
+        # Log the summary
+        logger.info("\n" + final_summary)
+        
+        # Update UI with final summary
+        if self.ui_server:
+            self.ui_server.add_progress(f"Task {'completed successfully' if success else 'completed with issues'}")
+            self.ui_server.update_headmaster("final_summary", final_summary)
         
         return summary
 

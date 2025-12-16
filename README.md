@@ -83,6 +83,20 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Quick Start (Interactive Mode)
+
+The easiest way to launch Five Minds is with interactive mode:
+
+```bash
+# Launch interactive mode (prompts for objective, auto-starts UI)
+python -m fiveminds.cli --interactive
+```
+
+This will:
+1. Prompt you for your objective and requirements
+2. Automatically start the web UI dashboard
+3. Execute everything autonomously - no further input needed!
+
 ### Command Line Interface
 
 ```bash
@@ -112,7 +126,22 @@ python -m fiveminds.cli --repo . --ui "Your objective"
 
 # Custom UI host and port
 python -m fiveminds.cli --repo . --ui --ui-host 0.0.0.0 --ui-port 8080 "Your objective"
+
+# With user credentials for git commits
+python -m fiveminds.cli --repo . --user-name "Your Name" --user-email "you@example.com" "Your objective"
 ```
+
+### Autonomous Mode
+
+Five Minds runs in **autonomous mode by default**. This means:
+- You define the objective
+- Five Minds handles EVERYTHING automatically
+- Runners execute and commit changes with your credentials
+- Reviews happen automatically
+- Tests are run automatically (pytest, npm test, playwright, etc.)
+- A final summary is generated when complete
+
+You can disable autonomous mode with `--no-auto` if you need more control.
 
 ### Python API
 
@@ -140,13 +169,19 @@ objective = Objective(
     ]
 )
 
-# Initialize and execute
-five_minds = FiveMinds(repo_path="/path/to/repo", max_runners=4)
+# Initialize and execute (autonomous mode by default)
+five_minds = FiveMinds(
+    repo_path="/path/to/repo", 
+    max_runners=4,
+    user_name="Your Name",      # For git commits
+    user_email="you@example.com" # For git commits
+)
 summary = five_minds.execute(objective)
 
 # Check results
 if summary['success']:
     print("✓ Objective completed successfully!")
+    print(summary['final_summary'])  # Detailed summary of what was accomplished
 else:
     print("✗ Objective needs more work")
 ```
@@ -162,13 +197,16 @@ objective = Objective(
     requirements=["Requirement 1", "Requirement 2"]
 )
 
-# Initialize with UI enabled
+# Initialize with UI enabled and autonomous mode
 five_minds = FiveMinds(
     repo_path="/path/to/repo",
     max_runners=4,
     enable_ui=True,
     ui_host="127.0.0.1",
-    ui_port=5000
+    ui_port=5000,
+    user_name="Your Name",
+    user_email="you@example.com",
+    autonomous=True  # Default
 )
 
 # Execute - UI will be available at http://127.0.0.1:5000
@@ -246,6 +284,12 @@ five_minds = FiveMinds(repo_path=".", enable_ui=True)
 
 ## Features
 
+### 🚀 Autonomous Execution
+- **Minimal User Actions**: Just define your objective - Five Minds does everything else
+- **Automatic Test Running**: Detects and runs pytest, npm test, playwright, go test, cargo test
+- **Git Integration**: Every Runner commits changes with your credentials
+- **Final Summary**: Get a comprehensive summary when the task is complete
+
 ### Smart Ticket Decomposition
 - Automatically breaks down complex objectives into manageable tickets
 - Identifies dependencies between tickets
@@ -257,6 +301,7 @@ five_minds = FiveMinds(repo_path=".", enable_ui=True)
 - Prevents conflicts between parallel work
 - Produces clean diffs and detailed logs
 - Captures test results and execution metrics
+- Commits changes automatically with user credentials
 
 ### Intelligent Review System
 - Evaluates alignment with original objectives
@@ -270,6 +315,13 @@ five_minds = FiveMinds(repo_path=".", enable_ui=True)
 - Respects dependencies between tickets
 - Maximizes resource utilization
 - Configurable number of parallel runners
+
+### Modern Web UI
+- Real-time progress monitoring with WebSocket updates
+- Welcome screen for easy onboarding
+- Status animations and visual feedback
+- Final summary display on completion
+- Stop/control buttons for autonomous execution
 
 ## Components
 
@@ -286,6 +338,7 @@ Runners execute tickets in isolated environments:
 - Creates sandbox for isolated execution
 - Implements ticket requirements
 - Runs tests and generates diffs
+- **Commits changes with user credentials**
 - Produces detailed logs
 - Cleans up after execution
 

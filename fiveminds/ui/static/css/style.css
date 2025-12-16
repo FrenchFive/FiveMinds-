@@ -1412,3 +1412,182 @@ a:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== Welcome Section ===== */
+.welcome-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.welcome-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--primary-color);
+}
+
+.welcome-content {
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary-light), var(--info-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-sm);
+}
+
+.welcome-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.welcome-description {
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.welcome-features {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.feature-icon {
+    font-size: 1.25rem;
+}
+
+/* ===== Objective Controls ===== */
+.objective-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* ===== Final Summary Section ===== */
+.final-summary-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.final-summary-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border: 1px solid var(--success-color);
+}
+
+.final-summary-card.failed {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(239, 68, 68, 0.1) 100%);
+    border: 1px solid var(--danger-color);
+}
+
+.final-summary-content {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* ===== Status Badge Animations ===== */
+.status-badge.analyzing,
+.status-badge.executing,
+.status-badge.reviewing,
+.status-badge.integrating {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ===== Modern Enhancements ===== */
+.card {
+    backdrop-filter: blur(10px);
+}
+
+.card-header {
+    background: linear-gradient(90deg, var(--bg-tertiary), transparent);
+}
+
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn:hover::after {
+    width: 200%;
+    height: 200%;
+}
+
+/* ===== Executing Status Styles ===== */
+.status-badge.executing {
+    background: linear-gradient(90deg, var(--warning-color), var(--primary-color));
+    background-size: 200% 100%;
+    animation: gradient-shift 2s ease infinite;
+}
+
+.status-badge.reviewing {
+    background: linear-gradient(90deg, var(--info-color), var(--primary-color));
+    background-size: 200% 100%;
+    animation: gradient-shift 2s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ===== Ticket Card Hover Effects ===== */
+.ticket-card {
+    transition: all var(--transition-fast), transform 0.2s ease;
+}
+
+.ticket-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}

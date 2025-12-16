@@ -4,11 +4,47 @@
 
 {% block content %}
 <div class="dashboard">
+    <!-- Welcome Section (shown when idle) -->
+    <div id="welcome-section" class="welcome-section">
+        <div class="welcome-card card">
+            <div class="card-body">
+                <div class="welcome-content">
+                    <div class="welcome-icon">🧠</div>
+                    <h1 class="welcome-title">Welcome to Five Minds</h1>
+                    <p class="welcome-subtitle">Your autonomous AI development assistant</p>
+                    <p class="welcome-description">
+                        Simply describe what you want to accomplish and Five Minds will handle everything 
+                        autonomously - from planning to implementation to testing.
+                    </p>
+                    <div class="welcome-features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🎯</span>
+                            <span>Define your objective</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🤖</span>
+                            <span>FM works autonomously</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✅</span>
+                            <span>Get results with commits</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Section -->
     <div class="dashboard-header">
         <div class="objective-card card">
             <div class="card-header">
                 <h2><span class="icon">🎯</span> Objective</h2>
+                <div id="objective-controls" class="objective-controls">
+                    <button id="stop-btn" class="btn btn-danger btn-small" style="display: none;">
+                        ⏹ Stop
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <p id="objective-description" class="objective-text">No objective set</p>
@@ -37,6 +73,18 @@
                         <span id="elapsed-time" class="value">-</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Summary Section (shown when completed) -->
+    <div id="final-summary-section" class="final-summary-section" style="display: none;">
+        <div class="card final-summary-card">
+            <div class="card-header">
+                <h2><span class="icon">📋</span> Final Summary</h2>
+            </div>
+            <div class="card-body">
+                <pre id="final-summary-content" class="final-summary-content"></pre>
             </div>
         </div>
     </div>

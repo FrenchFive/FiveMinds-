@@ -9,6 +9,9 @@ let elapsedInterval = null;
  * Handle full state update
  */
 function onStateUpdate(data) {
+    // Handle welcome section visibility
+    handleWelcomeSection(data);
+    
     // Update objective
     if (data.objective) {
         onObjectiveUpdate(data.objective);
@@ -43,6 +46,26 @@ function onStateUpdate(data) {
     if (data.start_time) {
         startElapsedTimer(data.start_time);
     }
+    
+    // Handle final summary
+    if (data.headmaster && data.headmaster.final_summary) {
+        showFinalSummary(data.headmaster.final_summary, data.status === 'completed');
+    }
+}
+
+/**
+ * Handle welcome section visibility
+ */
+function handleWelcomeSection(data) {
+    const welcomeSection = document.getElementById('welcome-section');
+    if (!welcomeSection) return;
+    
+    // Hide welcome section when there's an objective or execution has started
+    if (data.objective || data.status !== 'idle') {
+        welcomeSection.style.display = 'none';
+    } else {
+        welcomeSection.style.display = 'block';
+    }
 }
 
 /**
@@ -52,6 +75,8 @@ function onObjectiveUpdate(objective) {
     const descEl = document.getElementById('objective-description');
     const reqEl = document.getElementById('objective-requirements');
     const constEl = document.getElementById('objective-constraints');
+    const welcomeSection = document.getElementById('welcome-section');
+    const stopBtn = document.getElementById('stop-btn');
     
     if (descEl) {
         descEl.textContent = objective.description || 'No objective set';
@@ -66,6 +91,16 @@ function onObjectiveUpdate(objective) {
         const count = objective.constraints ? objective.constraints.length : 0;
         constEl.textContent = `${count} constraint${count !== 1 ? 's' : ''}`;
     }
+    
+    // Hide welcome section when objective is set
+    if (welcomeSection && objective.description) {
+        welcomeSection.style.display = 'none';
+    }
+    
+    // Show stop button when objective is set
+    if (stopBtn) {
+        stopBtn.style.display = objective.description ? 'inline-flex' : 'none';
+    }
 }
 
 /**
@@ -73,10 +108,44 @@ function onObjectiveUpdate(objective) {
  */
 function onStatusUpdate(status) {
     const badge = document.getElementById('system-status-badge');
+    const stopBtn = document.getElementById('stop-btn');
     
     if (badge) {
         badge.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
         badge.className = 'status-badge ' + formatStatusClass(status);
+    }
+    
+    // Update stop button visibility based on status
+    if (stopBtn) {
+        const isRunning = ['analyzing', 'executing', 'reviewing', 'integrating'].includes(status);
+        stopBtn.style.display = isRunning ? 'inline-flex' : 'none';
+    }
+}
+
+/**
+ * Show final summary
+ */
+function showFinalSummary(summary, success) {
+    const section = document.getElementById('final-summary-section');
+    const content = document.getElementById('final-summary-content');
+    const card = section ? section.querySelector('.final-summary-card') : null;
+    
+    if (section && content) {
+        content.textContent = summary;
+        section.style.display = 'block';
+        
+        if (card) {
+            card.classList.toggle('failed', !success);
+        }
+    }
+}
+
+/**
+ * Handle HeadMaster update (for final summary)
+ */
+function onHeadmasterUpdate(data) {
+    if (data.final_summary) {
+        showFinalSummary(data.final_summary, true);
     }
 }
 
