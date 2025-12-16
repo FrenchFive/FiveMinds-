@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}HeadMaster - Five Minds{% endblock %}
+
+{% block content %}
+<div class="headmaster-page">
+    <div class="page-header">
+        <h1><span class="icon">🎓</span> HeadMaster View</h1>
+        <p class="subtitle">Planning, orchestration, and dependency analysis</p>
+    </div>
+
+    <div class="headmaster-grid">
+        <!-- Reasoning Log -->
+        <div class="card reasoning-log">
+            <div class="card-header">
+                <h2><span class="icon">🧠</span> Reasoning Log</h2>
+                <span id="reasoning-count" class="badge">0 entries</span>
+            </div>
+            <div class="card-body">
+                <div id="reasoning-container" class="reasoning-container">
+                    <div class="reasoning-empty">
+                        <span class="empty-icon">🧠</span>
+                        <p>No reasoning entries yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Graph -->
+        <div class="card ticket-graph">
+            <div class="card-header">
+                <h2><span class="icon">📊</span> Ticket Graph</h2>
+            </div>
+            <div class="card-body">
+                <div id="ticket-graph-container" class="graph-container">
+                    <svg id="ticket-graph" width="100%" height="300"></svg>
+                </div>
+                <div class="graph-legend">
+                    <span class="legend-item"><span class="dot pending"></span> Pending</span>
+                    <span class="legend-item"><span class="dot in-progress"></span> In Progress</span>
+                    <span class="legend-item"><span class="dot completed"></span> Completed</span>
+                    <span class="legend-item"><span class="dot failed"></span> Failed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dependency View -->
+        <div class="card dependency-view">
+            <div class="card-header">
+                <h2><span class="icon">🔗</span> Dependency View</h2>
+            </div>
+            <div class="card-body">
+                <div id="dependency-container" class="dependency-container">
+                    <div class="dependency-empty">
+                        <span class="empty-icon">🔗</span>
+                        <p>No dependencies defined</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Status -->
+        <div class="card integration-status">
+            <div class="card-header">
+                <h2><span class="icon">🔧</span> Integration Status</h2>
+            </div>
+            <div class="card-body">
+                <div class="status-display">
+                    <span id="integration-status-badge" class="status-badge pending">Pending</span>
+                </div>
+                <div class="integration-details">
+                    <div class="detail-row">
+                        <span class="label">Patches Ready:</span>
+                        <span id="patches-ready" class="value">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Conflicts:</span>
+                        <span id="conflicts-count" class="value">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Tests:</span>
+                        <span id="tests-status" class="value">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waves Overview -->
+        <div class="card waves-overview">
+            <div class="card-header">
+                <h2><span class="icon">🌊</span> Execution Waves</h2>
+            </div>
+            <div class="card-body">
+                <div id="waves-container" class="waves-container">
+                    <div class="waves-empty">
+                        <span class="empty-icon">🌊</span>
+                        <p>No execution waves created</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/headmaster.js') }}"></script>
+{% endblock %}

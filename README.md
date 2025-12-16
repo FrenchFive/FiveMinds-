@@ -106,6 +106,12 @@ python -m fiveminds.cli --repo . \
 
 # Verbose mode for detailed logging
 python -m fiveminds.cli --repo . --verbose "Your objective"
+
+# With Web UI Dashboard
+python -m fiveminds.cli --repo . --ui "Your objective"
+
+# Custom UI host and port
+python -m fiveminds.cli --repo . --ui --ui-host 0.0.0.0 --ui-port 8080 "Your objective"
 ```
 
 ### Python API
@@ -145,6 +151,30 @@ else:
     print("✗ Objective needs more work")
 ```
 
+### With Web UI
+
+```python
+from fiveminds import FiveMinds
+from fiveminds.models import Objective
+
+objective = Objective(
+    description="Your objective",
+    requirements=["Requirement 1", "Requirement 2"]
+)
+
+# Initialize with UI enabled
+five_minds = FiveMinds(
+    repo_path="/path/to/repo",
+    max_runners=4,
+    enable_ui=True,
+    ui_host="127.0.0.1",
+    ui_port=5000
+)
+
+# Execute - UI will be available at http://127.0.0.1:5000
+summary = five_minds.execute(objective)
+```
+
 ### Example
 
 Run the included example:
@@ -154,6 +184,65 @@ python example.py
 ```
 
 This demonstrates the system with a sample objective to create a Python calculator library.
+
+## Web UI Dashboard
+
+Five Minds includes a comprehensive web-based UI for monitoring and controlling the system in real-time.
+
+### UI Features
+
+The UI system provides four main views:
+
+#### 1. Dashboard View 📊
+- **Objective**: Display current objective description and requirements
+- **Status**: Real-time system status with visual indicators
+- **Progress Timeline**: Chronological list of execution events
+- **Cost Usage**: Token count, API calls, and estimated cost tracking
+- **Active Jobs**: List of currently running tasks
+- **Tickets Overview**: Grid view of all tickets with status
+
+#### 2. Runner View 🏃
+- **Ticket Details**: Full ticket information with acceptance criteria
+- **Live Logs**: Real-time streaming logs from runner execution
+- **Files Touched**: List of files modified by the runner
+- **Runtime**: Elapsed execution time with live updates
+- **Cancel Control**: Ability to cancel running jobs
+
+#### 3. HeadMaster View 🎓
+- **Reasoning Log**: HeadMaster's planning and analysis decisions
+- **Ticket Graph**: Visual graph showing tickets and their relationships
+- **Dependency View**: List of ticket dependencies
+- **Integration Status**: Current integration state and metrics
+- **Execution Waves**: Parallel execution wave organization
+
+#### 4. Review View 🔍
+- **Diff Viewer**: Code diff visualization with syntax highlighting
+- **Acceptance Checklist**: Criteria with pass/fail indicators
+- **Risk List**: Identified risks and warnings
+- **Follow-up Buttons**: Quick creation of follow-up tickets
+- **Review Summary**: Approval rates and alignment scores
+
+### Starting the UI
+
+```bash
+# Via CLI
+python -m fiveminds.cli --repo . --ui "Your objective"
+
+# Via Python API
+from fiveminds import FiveMinds
+five_minds = FiveMinds(repo_path=".", enable_ui=True)
+```
+
+### UI Screenshots
+
+**Dashboard View**
+![Dashboard](https://github.com/user-attachments/assets/100afdf7-414f-46fc-aed1-65413d88a96e)
+
+**HeadMaster View**
+![HeadMaster](https://github.com/user-attachments/assets/2cb86d4b-98bc-4f20-8340-72aad14c03be)
+
+**Review View**
+![Review](https://github.com/user-attachments/assets/9782c964-e269-4494-a5f0-3501e9820dd8)
 
 ## Features
 
@@ -226,6 +315,9 @@ The main system coordinator:
 - `--max-runners`: Number of parallel runners (default: 4)
 - `--verbose`: Enable detailed logging
 - `--repo`: Repository path (default: current directory)
+- `--ui`: Enable web UI dashboard
+- `--ui-host`: UI server host (default: 127.0.0.1)
+- `--ui-port`: UI server port (default: 5000)
 
 ## Development
 
@@ -241,12 +333,34 @@ FiveMinds-/
 │   ├── reviewer.py         # Reviewer component
 │   ├── orchestrator.py     # Main orchestrator
 │   ├── cli.py              # Command-line interface
+│   └── ui/                 # Web UI system
+│       ├── __init__.py     # UI module initialization
+│       ├── server.py       # Flask server with WebSocket
+│       ├── templates/      # HTML templates
+│       │   ├── base.html
+│       │   ├── dashboard.html
+│       │   ├── runner.html
+│       │   ├── runner_detail.html
+│       │   ├── headmaster.html
+│       │   ├── review.html
+│       │   └── review_detail.html
+│       └── static/         # Static assets
+│           ├── css/style.css
+│           └── js/
+│               ├── main.js
+│               ├── dashboard.js
+│               ├── runner.js
+│               ├── runner_detail.js
+│               ├── headmaster.js
+│               ├── review.js
+│               └── review_detail.js
 │   └── tools/              # Tool system
 │       ├── __init__.py     # Tools package
 │       ├── repo.py         # Repository tools
 │       ├── shell.py        # Shell tools
 │       └── git.py          # Git tools
 ├── example.py              # Example usage
+├── demo_ui.py              # UI demo script
 ├── requirements.txt        # Dependencies
 ├── README.md              # Documentation
 └── LICENSE                # License file
