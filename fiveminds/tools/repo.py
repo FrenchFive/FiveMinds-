@@ -11,6 +11,8 @@ Provides controlled access to repository operations:
 
 import os
 import re
+import fnmatch
+import difflib
 import logging
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -118,8 +120,8 @@ class RepoTools:
                 
                 try:
                     for item in sorted(current.iterdir()):
-                        # Skip ignored patterns
-                        if any(re.match(pattern, item.name) for pattern in ignore_patterns):
+                        # Skip ignored patterns (use fnmatch for glob-style matching)
+                        if any(fnmatch.fnmatch(item.name, pattern) for pattern in ignore_patterns):
                             continue
                         
                         if item.is_dir():
@@ -374,8 +376,6 @@ class RepoTools:
         self._log(f"repo.diff called: path1={path1}, path2={path2}")
         
         try:
-            import difflib
-            
             file1 = self._validate_path(path1)
             
             if not file1.exists():
@@ -488,16 +488,45 @@ class RepoTools:
     def _apply_hunks(self, original: str, hunks: List[List[str]]) -> str:
         """Apply hunks to original content."""
         lines = original.split('\n')
+        offset = 0  # Track line number offset from previous hunks
         
         for hunk in hunks:
             if not hunk:
                 continue
             
-            # Simple hunk application - in production, use proper patch tool
+            # Parse hunk header to get line numbers
+            header = hunk[0]
+            # Format: @@ -start,count +start,count @@
+            import re
+            match = re.match(r'@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@', header)
+            if not match:
+                continue
+            
+            old_start = int(match.group(1))
+            new_start = int(match.group(2))
+            
+            # Calculate the actual position with offset
+            pos = new_start - 1 + offset  # Convert to 0-indexed
+            
+            # Process hunk lines
             for line in hunk[1:]:  # Skip the @@ header
-                if line.startswith('+') and not line.startswith('+++'):
-                    # Add line (simplified - appends at end)
-                    lines.append(line[1:])
+                if not line:
+                    continue
+                    
+                if line.startswith('-') and not line.startswith('---'):
+                    # Delete line
+                    if 0 <= pos < len(lines):
+                        del lines[pos]
+                        offset -= 1
+                elif line.startswith('+') and not line.startswith('+++'):
+                    # Add line
+                    if pos <= len(lines):
+                        lines.insert(pos, line[1:])
+                        offset += 1
+                        pos += 1
+                else:
+                    # Context line
+                    pos += 1
         
         return '\n'.join(lines)
     

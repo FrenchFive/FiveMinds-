@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 DEFAULT_TIMEOUT = 30  # seconds
-MAX_OUTPUT_SIZE = 1024 * 1024  # 1MB max output
+MAX_OUTPUT_LENGTH = 1024 * 1024  # 1MB max output/error length
 
 
 @dataclass
@@ -120,10 +120,10 @@ class ShellTools:
             stdout = result.stdout or ""
             stderr = result.stderr or ""
             
-            if len(stdout) > MAX_OUTPUT_SIZE:
-                stdout = stdout[:MAX_OUTPUT_SIZE] + "\n... [output truncated]"
-            if len(stderr) > MAX_OUTPUT_SIZE:
-                stderr = stderr[:MAX_OUTPUT_SIZE] + "\n... [output truncated]"
+            if len(stdout) > MAX_OUTPUT_LENGTH:
+                stdout = stdout[:MAX_OUTPUT_LENGTH] + "\n... [output truncated]"
+            if len(stderr) > MAX_OUTPUT_LENGTH:
+                stderr = stderr[:MAX_OUTPUT_LENGTH] + "\n... [output truncated]"
             
             cmd_record["exit_code"] = result.returncode
             cmd_record["output"] = stdout

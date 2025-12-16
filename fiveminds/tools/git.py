@@ -355,7 +355,8 @@ class GitTools:
                             result["staged"].append({"status": status, "file": file_path})
                         elif section == "unstaged":
                             result["unstaged"].append({"status": status, "file": file_path})
-                elif section == "untracked" and line.strip() and not line.startswith('\t'):
+                elif section == "untracked" and line.strip() and line.startswith('\t'):
+                    # Git uses tab indentation for untracked files
                     result["untracked"].append(line.strip())
         
         return result
