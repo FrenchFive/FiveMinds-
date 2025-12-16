@@ -69,6 +69,7 @@ class UIServer:
         }
         self._lock = threading.Lock()
         self._cancel_callbacks: Dict[str, Callable] = {}
+        self._objective_callback: Optional[Callable] = None
         self._server_thread: Optional[threading.Thread] = None
         self._running = False
         
@@ -244,6 +245,45 @@ class UIServer:
             
             self._emit_update("tickets_update", self._state["tickets"])
             return jsonify({"success": True, "message": "Follow-up ticket created"})
+        
+        @self.app.route('/api/objective', methods=['POST'])
+        def submit_objective():
+            """Submit an objective from the UI."""
+            data = request.json
+            if not data:
+                return jsonify({"success": False, "message": "No data provided"}), 400
+            
+            # Validate objective data
+            if not data.get("description"):
+                return jsonify({"success": False, "message": "Objective description is required"}), 400
+            
+            # Store objective
+            objective = {
+                "description": data.get("description", ""),
+                "requirements": data.get("requirements", []),
+                "constraints": data.get("constraints", []),
+                "success_metrics": data.get("success_metrics", ["All acceptance criteria met", "All tests pass"])
+            }
+            
+            # Update state
+            with self._lock:
+                self._state["objective"] = objective
+                self._state["status"] = "analyzing"
+                self._state["start_time"] = datetime.now().isoformat()
+                self._add_progress("Objective submitted from UI: " + objective["description"])
+            
+            # Emit updates
+            self._emit_update("objective_update", self._state["objective"])
+            self._emit_update("status_update", self._state["status"])
+            
+            # Call the callback if set (to notify CLI)
+            if self._objective_callback:
+                try:
+                    self._objective_callback(objective)
+                except Exception as e:
+                    logger.error(f"Error in objective callback: {e}")
+            
+            return jsonify({"success": True, "message": "Objective submitted successfully"})
 
     def _setup_socketio_handlers(self):
         """Setup WebSocket handlers."""
@@ -521,6 +561,16 @@ class UIServer:
         """
         with self._lock:
             return dict(self._state)
+
+    def set_objective_callback(self, callback: Callable):
+        """
+        Set a callback to be called when an objective is submitted from the UI.
+        
+        Args:
+            callback: Function to call with objective data when submitted
+        """
+        self._objective_callback = callback
+        logger.info("Objective callback registered")
 
     def start(self, background: bool = True):
         """

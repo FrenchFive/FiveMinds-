@@ -3,6 +3,56 @@
 {% block title %}Dashboard - Five Minds{% endblock %}
 
 {% block content %}
+<!-- Welcome Modal (shown when no objective is set) -->
+<div id="welcome-modal" class="modal">
+    <div class="modal-content welcome-modal-content">
+        <div class="welcome-header">
+            <h1>🧠 Welcome to Five Minds</h1>
+            <p>An agentic, repo-native AI dev system</p>
+        </div>
+        
+        <form id="objective-form" class="objective-form">
+            <div class="form-group">
+                <label for="objective-description">What do you want to accomplish? *</label>
+                <textarea 
+                    id="objective-description" 
+                    name="description" 
+                    rows="3" 
+                    placeholder="e.g., Add user authentication to the web app"
+                    required
+                ></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="objective-requirements">Requirements (one per line)</label>
+                <textarea 
+                    id="objective-requirements" 
+                    name="requirements" 
+                    rows="4" 
+                    placeholder="e.g.,&#10;Implement login/logout endpoints&#10;Add user model&#10;Create authentication middleware"
+                ></textarea>
+                <small>Leave empty to use the objective as the main requirement</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="objective-constraints">Constraints (one per line)</label>
+                <textarea 
+                    id="objective-constraints" 
+                    name="constraints" 
+                    rows="3" 
+                    placeholder="e.g.,&#10;Use Python 3.8+&#10;Follow PEP 8 guidelines&#10;Maintain backward compatibility"
+                ></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    🚀 Start Five Minds
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="dashboard">
     <!-- Top Header Bar - Current Task Title -->
     <div class="top-header-bar">

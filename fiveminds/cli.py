@@ -213,11 +213,17 @@ Examples:
     
     # Get objective
     if args.interactive:
-        objective = interactive_mode()
-        if objective is None:
-            return 1
         # Auto-enable UI in interactive mode
         args.ui = True
+        
+        # If UI is enabled, we'll get the objective from the UI
+        # Otherwise, use console interactive mode
+        if args.ui:
+            objective = None  # Will be set by UI callback
+        else:
+            objective = interactive_mode()
+            if objective is None:
+                return 1
     elif args.objective:
         objective = Objective(
             description=args.objective,
@@ -234,8 +240,13 @@ Examples:
     print(f"\n🧠 Five Minds - Agentic AI Dev System")
     print(f"=" * 50)
     print(f"Repository: {repo_path}")
-    print(f"Objective: {objective.description}")
-    print(f"Requirements: {len(objective.requirements)}")
+    
+    if objective:
+        print(f"Objective: {objective.description}")
+        print(f"Requirements: {len(objective.requirements)}")
+    else:
+        print(f"Objective: Waiting for input from UI...")
+    
     print(f"Autonomous mode: {'Enabled' if args.autonomous else 'Disabled'}")
     
     if args.ui:
@@ -253,6 +264,41 @@ Examples:
         user_email=args.user_email,
         autonomous=args.autonomous
     )
+    
+    # If we're waiting for objective from UI, set up callback and wait
+    if objective is None and args.ui:
+        import threading
+        objective_received = threading.Event()
+        received_objective = [None]  # Use list to allow modification in closure
+        
+        def on_objective_submitted(obj_data):
+            """Callback when objective is submitted from UI."""
+            received_objective[0] = Objective(
+                description=obj_data["description"],
+                requirements=obj_data.get("requirements", [obj_data["description"]]),
+                constraints=obj_data.get("constraints", []),
+                success_metrics=obj_data.get("success_metrics", ["All acceptance criteria met", "All tests pass"])
+            )
+            objective_received.set()
+        
+        # Register callback
+        five_minds.ui_server.set_objective_callback(on_objective_submitted)
+        
+        # Start UI server
+        five_minds.ui_server.start(background=True)
+        
+        print(f"\n🌐 Waiting for objective submission from UI...")
+        print(f"📊 Open your browser to: http://{args.ui_host}:{args.ui_port}")
+        print(f"Press Ctrl+C to cancel\n")
+        
+        try:
+            # Wait for objective to be submitted
+            objective_received.wait()
+            objective = received_objective[0]
+            print(f"\n✓ Objective received from UI: {objective.description}\n")
+        except KeyboardInterrupt:
+            print("\n\nCancelled by user.")
+            return 0
     
     # Execute
     try:
