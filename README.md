@@ -81,6 +81,24 @@ cd FiveMinds-
 pip install -r requirements.txt
 ```
 
+### Windows Quick Start
+
+For Windows users, simply double-click `run.bat` or run it from the command prompt:
+
+```batch
+REM This will automatically run setup if needed and launch Five Minds
+run.bat
+
+REM Or run setup manually first
+setup.bat
+run.bat
+```
+
+The `run.bat` script will:
+1. Check if the environment is set up correctly
+2. Run `setup.bat` automatically if dependencies are missing
+3. Launch Five Minds in interactive mode with the web UI
+
 ## Usage
 
 ### Quick Start (Interactive Mode)
