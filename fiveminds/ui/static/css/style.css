@@ -1940,7 +1940,7 @@ a:hover {
 }
 
 .welcome-header {
-    background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+    background: linear-gradient(135deg, var(--primary-color), var(--success-color));
     color: white;
     padding: 2rem;
     text-align: center;
@@ -1988,7 +1988,7 @@ a:hover {
 
 .objective-form textarea:focus {
     outline: none;
-    border-color: var(--accent-color);
+    border-color: var(--primary-color);
 }
 
 .objective-form small {

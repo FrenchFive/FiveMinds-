@@ -589,10 +589,12 @@ async function handleObjectiveSubmit(event) {
         success_metrics: ["All acceptance criteria met", "All tests pass"]
     };
     
+    // Get submit button once
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
     try {
         // Disable submit button
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Starting...';
         
@@ -623,8 +625,7 @@ async function handleObjectiveSubmit(event) {
         alert('Connection Error: Unable to submit your objective.\n\n' + 
               'Details: ' + errorMsg + '\n\n' +
               'Please check that the server is running and try again.');
-        const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Start Five Minds';
+        submitBtn.textContent = originalText;
     }
 }
