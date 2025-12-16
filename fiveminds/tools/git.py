@@ -311,6 +311,95 @@ class GitTools:
         
         return result
     
+    def add(self, files: Optional[List[str]] = None, all: bool = False) -> ToolResult:
+        """
+        Stage files for commit.
+        
+        Args:
+            files: Specific files to stage (optional)
+            all: Stage all changes (-A flag)
+            
+        Returns:
+            ToolResult with add result
+        """
+        self._log(f"git.add called: files={files}, all={all}")
+        
+        args = ['add']
+        
+        if all:
+            args.append('-A')
+        elif files:
+            args.extend(files)
+        else:
+            args.append('.')
+        
+        result = self._run_git(args)
+        
+        if result.success:
+            self._log("git.add completed successfully")
+        else:
+            self._log(f"git.add failed: {result.error}")
+        
+        return result
+    
+    def commit(self, message: str, author: Optional[str] = None) -> ToolResult:
+        """
+        Create a commit with staged changes.
+        
+        Args:
+            message: Commit message
+            author: Author string in format "Name <email>" (optional)
+            
+        Returns:
+            ToolResult with commit result
+        """
+        self._log(f"git.commit called: message={message[:50]}...")
+        
+        args = ['commit', '-m', message]
+        
+        if author:
+            args.extend(['--author', author])
+        
+        result = self._run_git(args)
+        
+        if result.success:
+            self._log("git.commit completed successfully")
+        else:
+            self._log(f"git.commit failed: {result.error}")
+        
+        return result
+    
+    def configure(self, name: str, email: str, scope: str = "local") -> ToolResult:
+        """
+        Configure git user name and email.
+        
+        Args:
+            name: User name
+            email: User email
+            scope: Configuration scope ("local" or "global")
+            
+        Returns:
+            ToolResult with configuration result
+        """
+        self._log(f"git.configure called: name={name}, email={email}")
+        
+        scope_flag = f"--{scope}"
+        
+        # Set user name
+        result = self._run_git(['config', scope_flag, 'user.name', name])
+        if not result.success:
+            return result
+        
+        # Set user email
+        result = self._run_git(['config', scope_flag, 'user.email', email])
+        
+        if result.success:
+            self._log("git.configure completed successfully")
+        else:
+            self._log(f"git.configure failed: {result.error}")
+        
+        return result
+    
     def _parse_status(self, output: str, short: bool) -> Dict[str, Any]:
         """Parse git status output into structured data."""
         result = {

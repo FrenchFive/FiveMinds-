@@ -11,7 +11,9 @@ All commands are:
 - Timeout-bound
 """
 
+import json
 import os
+import re
 import shutil
 import subprocess
 import logging
@@ -222,6 +224,152 @@ class ShellTools:
                 error=str(e),
                 logs=self._logs.copy()
             )
+    
+    def detect_test_framework(self) -> ToolResult:
+        """
+        Detect the test framework used in the project.
+        
+        Returns:
+            ToolResult with detected framework and test command
+        """
+        self._log("shell.detect_test_framework called")
+        
+        detected = {
+            "framework": None,
+            "command": None,
+            "args": []
+        }
+        
+        # Check for Python pytest
+        if (self.working_dir / "pytest.ini").exists() or \
+           (self.working_dir / "pyproject.toml").exists() or \
+           (self.working_dir / "setup.py").exists():
+            if self.which("pytest").success:
+                detected = {"framework": "pytest", "command": "pytest", "args": ["-v"]}
+        
+        # Check for Node.js/npm test
+        package_json = self.working_dir / "package.json"
+        if package_json.exists():
+            try:
+                with open(package_json) as f:
+                    pkg = json.load(f)
+                    if "scripts" in pkg and "test" in pkg["scripts"]:
+                        detected = {"framework": "npm", "command": "npm", "args": ["test"]}
+                    # Check for playwright
+                    if "scripts" in pkg and any("playwright" in str(v) for v in pkg["scripts"].values()):
+                        detected = {"framework": "playwright", "command": "npx", "args": ["playwright", "test"]}
+            except Exception:
+                pass
+        
+        # Check for Go tests
+        if (self.working_dir / "go.mod").exists():
+            detected = {"framework": "go", "command": "go", "args": ["test", "./..."]}
+        
+        # Check for Cargo/Rust tests
+        if (self.working_dir / "Cargo.toml").exists():
+            detected = {"framework": "cargo", "command": "cargo", "args": ["test"]}
+        
+        if detected["framework"]:
+            self._log(f"shell.detect_test_framework found: {detected['framework']}")
+            return ToolResult(
+                success=True,
+                output=detected,
+                logs=self._logs.copy()
+            )
+        else:
+            self._log("shell.detect_test_framework: no framework detected")
+            return ToolResult(
+                success=False,
+                output=detected,
+                error="No test framework detected",
+                logs=self._logs.copy()
+            )
+    
+    def run_tests(self, timeout: int = 300) -> ToolResult:
+        """
+        Detect and run the project's test suite.
+        
+        Args:
+            timeout: Timeout for test execution in seconds (default: 5 minutes)
+            
+        Returns:
+            ToolResult with test results
+        """
+        self._log("shell.run_tests called")
+        
+        # Detect test framework
+        detection = self.detect_test_framework()
+        
+        if not detection.success:
+            return ToolResult(
+                success=False,
+                output={"tests_run": False},
+                error="No test framework detected",
+                logs=self._logs.copy()
+            )
+        
+        framework_info = detection.output
+        command = framework_info["command"]
+        args = framework_info["args"]
+        
+        self._log(f"shell.run_tests executing: {command} {' '.join(args)}")
+        
+        # Run the tests
+        result = self.run(command, args, timeout=timeout)
+        
+        # Parse test results
+        test_output = {
+            "framework": framework_info["framework"],
+            "command": f"{command} {' '.join(args)}",
+            "exit_code": result.output.get("exit_code") if result.output else None,
+            "stdout": result.output.get("stdout", "") if result.output else "",
+            "stderr": result.output.get("stderr", "") if result.output else "",
+            "passed": result.success,
+            "tests_run": True
+        }
+        
+        # Try to parse test counts from output
+        test_counts = self._parse_test_output(
+            test_output.get("stdout", ""), 
+            framework_info["framework"]
+        )
+        test_output.update(test_counts)
+        
+        return ToolResult(
+            success=result.success,
+            output=test_output,
+            error=result.error,
+            logs=self._logs.copy()
+        )
+    
+    def _parse_test_output(self, output: str, framework: str) -> Dict[str, Any]:
+        """Parse test output to extract counts."""
+        counts = {"total": 0, "passed": 0, "failed": 0, "skipped": 0}
+        
+        if framework == "pytest":
+            # pytest output: "5 passed, 2 failed, 1 skipped"
+            match = re.search(r'(\d+) passed', output)
+            if match:
+                counts["passed"] = int(match.group(1))
+            match = re.search(r'(\d+) failed', output)
+            if match:
+                counts["failed"] = int(match.group(1))
+            match = re.search(r'(\d+) skipped', output)
+            if match:
+                counts["skipped"] = int(match.group(1))
+            counts["total"] = counts["passed"] + counts["failed"] + counts["skipped"]
+        
+        elif framework == "npm" or framework == "playwright":
+            # Jest/Mocha/Playwright: "Tests: X passed, Y failed"
+            match = re.search(r'(\d+) passed', output, re.IGNORECASE)
+            if match:
+                counts["passed"] = int(match.group(1))
+            match = re.search(r'(\d+) failed', output, re.IGNORECASE)
+            if match:
+                counts["failed"] = int(match.group(1))
+            counts["total"] = counts["passed"] + counts["failed"]
+        
+        return counts
     
     def get_command_history(self) -> List[Dict[str, Any]]:
         """Get history of executed commands."""

@@ -110,6 +110,11 @@ class UIServer:
             """Review detail view."""
             return render_template('review_detail.html', ticket_id=ticket_id)
         
+        @self.app.route('/settings')
+        def settings_view():
+            """Settings view for API keys and model configuration."""
+            return render_template('settings.html')
+        
         # API endpoints
         @self.app.route('/api/state')
         def get_state():
@@ -140,6 +145,79 @@ class UIServer:
             """Get headmaster state."""
             with self._lock:
                 return jsonify(self._state["headmaster"])
+        
+        @self.app.route('/api/settings', methods=['GET'])
+        def get_settings():
+            """Get current settings (without exposing full API keys)."""
+            with self._lock:
+                settings = self._state.get("settings", {})
+                # Return safe version without full API keys
+                safe_settings = {
+                    "api_keys": {
+                        "openai_configured": bool(settings.get("api_keys", {}).get("openai_key")),
+                        "anthropic_configured": bool(settings.get("api_keys", {}).get("anthropic_key")),
+                        "google_configured": bool(settings.get("api_keys", {}).get("google_key")),
+                        "cohere_configured": bool(settings.get("api_keys", {}).get("cohere_key")),
+                        "custom_endpoint": settings.get("api_keys", {}).get("custom_endpoint", "")
+                    },
+                    "models": settings.get("models", {
+                        "headmaster": "gpt-4",
+                        "runner": "gpt-4",
+                        "reviewer": "gpt-4",
+                        "temperature": 0.7,
+                        "max_tokens": 4096
+                    })
+                }
+                return jsonify(safe_settings)
+        
+        @self.app.route('/api/settings', methods=['POST'])
+        def save_settings():
+            """Save settings."""
+            data = request.json
+            if not data:
+                return jsonify({"success": False, "message": "No data provided"}), 400
+            
+            with self._lock:
+                if "settings" not in self._state:
+                    self._state["settings"] = {}
+                
+                # Update API keys (only if provided - don't overwrite with empty)
+                if "api_keys" in data:
+                    if "api_keys" not in self._state["settings"]:
+                        self._state["settings"]["api_keys"] = {}
+                    
+                    for key in ["openai_key", "anthropic_key", "google_key", "cohere_key"]:
+                        if data["api_keys"].get(key):
+                            self._state["settings"]["api_keys"][key] = data["api_keys"][key]
+                    
+                    # Custom endpoint can be empty
+                    if "custom_endpoint" in data["api_keys"]:
+                        self._state["settings"]["api_keys"]["custom_endpoint"] = data["api_keys"]["custom_endpoint"]
+                
+                # Update model configuration
+                if "models" in data:
+                    self._state["settings"]["models"] = data["models"]
+            
+            self._emit_update("settings_update", {"updated": True})
+            return jsonify({"success": True, "message": "Settings saved successfully"})
+        
+        @self.app.route('/api/settings/reset', methods=['POST'])
+        def reset_settings():
+            """Reset settings to defaults."""
+            with self._lock:
+                self._state["settings"] = {
+                    "api_keys": {},
+                    "models": {
+                        "headmaster": "gpt-4",
+                        "runner": "gpt-4",
+                        "reviewer": "gpt-4",
+                        "temperature": 0.7,
+                        "max_tokens": 4096
+                    }
+                }
+            
+            self._emit_update("settings_update", {"reset": True})
+            return jsonify({"success": True, "message": "Settings reset to defaults"})
         
         @self.app.route('/api/cancel/<runner_id>', methods=['POST'])
         def cancel_runner(runner_id):
