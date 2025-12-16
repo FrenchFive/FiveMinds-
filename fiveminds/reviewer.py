@@ -18,6 +18,9 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# Constants
+ALIGNMENT_SCORE_THRESHOLD = 0.7  # Minimum alignment score for approval
+
 
 class Reviewer:
     """
@@ -88,7 +91,7 @@ class Reviewer:
         alignment_score = self._calculate_alignment_score(ticket, result)
         feedback_items.append(f"Alignment score: {alignment_score:.2f}")
         
-        if alignment_score < 0.7:
+        if alignment_score < ALIGNMENT_SCORE_THRESHOLD:
             approved = False
             feedback_items.append("Low alignment with original objective")
         

@@ -4,7 +4,7 @@ HeadMaster - Fast analyzer that reads repos and decomposes work into parallel ti
 
 import os
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from .models import (

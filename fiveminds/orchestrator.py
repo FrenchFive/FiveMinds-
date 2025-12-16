@@ -147,6 +147,18 @@ class FiveMinds:
                     finally:
                         runner.cleanup_sandbox()
 
+    def _find_ticket_by_id(self, ticket_id: str) -> Optional[Ticket]:
+        """
+        Find a ticket by its ID.
+
+        Args:
+            ticket_id: The ticket ID to find
+
+        Returns:
+            The ticket if found, None otherwise
+        """
+        return next((t for t in self.tickets if t.id == ticket_id), None)
+
     def _review_results(self):
         """
         Review all execution results.
@@ -155,7 +167,7 @@ class FiveMinds:
         
         for ticket_id, result in self.results.items():
             # Find the corresponding ticket
-            ticket = next((t for t in self.tickets if t.id == ticket_id), None)
+            ticket = self._find_ticket_by_id(ticket_id)
             if not ticket:
                 logger.warning(f"No ticket found for result {ticket_id}")
                 continue
@@ -174,6 +186,19 @@ class FiveMinds:
                 self.tickets.extend(review.follow_up_tickets)
                 logger.info(f"    → {len(review.follow_up_tickets)} follow-up(s) created")
 
+    def _is_result_approved(self, ticket_id: str) -> bool:
+        """
+        Check if a result is approved.
+
+        Args:
+            ticket_id: The ticket ID to check
+
+        Returns:
+            True if approved, False otherwise
+        """
+        review = self.reviews.get(ticket_id)
+        return review is not None and review.approved
+
     def _integrate_and_test(self) -> dict:
         """
         Integrate all approved changes and run final tests.
@@ -184,7 +209,7 @@ class FiveMinds:
         approved_results = [
             (ticket_id, result) 
             for ticket_id, result in self.results.items()
-            if self.reviews.get(ticket_id, ReviewResult(ticket_id=ticket_id, approved=False, feedback="", alignment_score=0.0)).approved
+            if self._is_result_approved(ticket_id)
         ]
         
         logger.info(f"Integrating {len(approved_results)} approved change(s)")

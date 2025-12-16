@@ -16,6 +16,9 @@ from .models import Ticket, RunnerResult, TicketStatus
 
 logger = logging.getLogger(__name__)
 
+# Configuration
+ALLOWED_DOTFILES = {'.gitignore', '.gitattributes', '.editorconfig'}  # Dotfiles to copy to sandbox
+
 
 class Runner:
     """
@@ -57,7 +60,7 @@ class Runner:
         
         # Copy files while respecting .gitignore patterns
         for item in self.repo_path.iterdir():
-            if item.name.startswith('.') and item.name not in ['.gitignore']:
+            if item.name.startswith('.') and item.name not in ALLOWED_DOTFILES:
                 continue
             if item.is_dir() and item.name in ['__pycache__', 'node_modules', 'venv', 'env']:
                 continue
@@ -183,11 +186,12 @@ class Runner:
             Diff string
         """
         # In a real system, this would use git diff or similar
+        # This is a simulated diff showing the type of changes made
         diff = f"""
-diff --git a/example.py b/example.py
+diff --git a/modified_file.py b/modified_file.py
 index 1234567..abcdefg 100644
---- a/example.py
-+++ b/example.py
+--- a/modified_file.py
++++ b/modified_file.py
 @@ -1,3 +1,6 @@
 +# Changes made by Runner {self.runner_id}
 +
