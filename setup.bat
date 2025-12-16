@@ -78,7 +78,7 @@ echo    Virtual environment activated.
 REM Install dependencies
 echo.
 echo [4/4] Installing dependencies...
-pip install --upgrade pip >nul 2>&1
+pip install --upgrade pip
 pip install -r requirements.txt
 if %ERRORLEVEL% NEQ 0 (
     echo.

@@ -92,12 +92,12 @@ goto parse_args
 echo Usage: run.bat [OPTIONS] [OBJECTIVE]
 echo.
 echo Options:
-echo   --help, -h        Show this help message
-echo   --interactive     Run in interactive mode (prompts for objective)
-echo   --ui              Enable web UI dashboard
-echo   --verbose         Enable verbose logging
-echo   --repo PATH       Path to the repository (default: current directory)
-echo   --max-runners N   Maximum number of parallel runners (default: 4)
+echo   --help, -h           Show this help message
+echo   -i, --interactive    Run in interactive mode (prompts for objective)
+echo   --ui                 Enable web UI dashboard
+echo   --verbose            Enable verbose logging
+echo   --repo PATH          Path to the repository (default: current directory)
+echo   --max-runners N      Maximum number of parallel runners (default: 4)
 echo.
 echo Examples:
 echo   run.bat                              Start in interactive mode with UI
@@ -115,7 +115,7 @@ if not defined HAS_OBJECTIVE (
 ) else (
     echo Starting Five Minds...
     echo.
-    python -m fiveminds.cli --ui%ARGS%
+    python -m fiveminds.cli --ui %ARGS%
 )
 
 if %ERRORLEVEL% NEQ 0 (
