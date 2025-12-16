@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Review {{ ticket_id }} - Five Minds{% endblock %}
+
+{% block content %}
+<div class="review-detail-page">
+    <div class="page-header">
+        <a href="/review" class="back-link">← Back to Reviews</a>
+        <h1><span class="icon">🔍</span> Review: <span id="review-ticket-id">{{ ticket_id }}</span></h1>
+    </div>
+
+    <div class="review-detail-grid">
+        <!-- Review Status -->
+        <div class="card review-status">
+            <div class="card-header">
+                <h2><span class="icon">✅</span> Review Status</h2>
+            </div>
+            <div class="card-body">
+                <div class="status-display">
+                    <span id="review-status-badge" class="status-badge pending">Pending</span>
+                </div>
+                <div class="score-display">
+                    <span class="label">Alignment Score:</span>
+                    <div class="score-bar">
+                        <div id="score-fill" class="score-fill" style="width: 0%"></div>
+                    </div>
+                    <span id="score-value" class="score-value">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diff Viewer -->
+        <div class="card diff-viewer">
+            <div class="card-header">
+                <h2><span class="icon">📝</span> Diff Viewer</h2>
+                <div class="diff-controls">
+                    <button class="btn btn-small" onclick="toggleDiffView('split')">Split View</button>
+                    <button class="btn btn-small" onclick="toggleDiffView('unified')">Unified View</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="diff-container" class="diff-container">
+                    <pre id="diff-content" class="diff-content">
+                        <span class="diff-empty">No diff available</span>
+                    </pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceptance Checklist -->
+        <div class="card acceptance-checklist">
+            <div class="card-header">
+                <h2><span class="icon">✔️</span> Acceptance Checklist</h2>
+                <span id="criteria-progress" class="badge">0/0 met</span>
+            </div>
+            <div class="card-body">
+                <ul id="criteria-list" class="criteria-list">
+                    <li class="criteria-empty">No acceptance criteria defined</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Risk List -->
+        <div class="card risk-list">
+            <div class="card-header">
+                <h2><span class="icon">⚠️</span> Risk List</h2>
+            </div>
+            <div class="card-body">
+                <ul id="risks-list" class="risks-list">
+                    <li class="risks-empty">No risks identified</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="card feedback-section">
+            <div class="card-header">
+                <h2><span class="icon">💬</span> Feedback</h2>
+            </div>
+            <div class="card-body">
+                <div id="feedback-content" class="feedback-content">
+                    <p class="feedback-empty">No feedback provided</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="card suggestions-section">
+            <div class="card-header">
+                <h2><span class="icon">💡</span> Suggestions</h2>
+            </div>
+            <div class="card-body">
+                <ul id="suggestions-list" class="suggestions-list">
+                    <li class="suggestions-empty">No suggestions available</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Follow-up Actions -->
+        <div class="card followup-actions">
+            <div class="card-header">
+                <h2><span class="icon">📌</span> Follow-up Actions</h2>
+            </div>
+            <div class="card-body">
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="createFollowUpFromReview()">
+                        Create Follow-up Ticket
+                    </button>
+                    <button class="btn btn-secondary" onclick="rerunTicket()">
+                        Request Re-run
+                    </button>
+                </div>
+                <div id="followup-tickets" class="followup-tickets">
+                    <h4>Existing Follow-ups:</h4>
+                    <ul id="followup-list" class="followup-list">
+                        <li class="followup-empty">No follow-up tickets</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const TICKET_ID = "{{ ticket_id }}";
+</script>
+<script src="{{ url_for('static', filename='js/review_detail.js') }}"></script>
+{% endblock %}

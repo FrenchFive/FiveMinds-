@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Runner {{ runner_id }} - Five Minds{% endblock %}
+
+{% block content %}
+<div class="runner-detail-page">
+    <div class="page-header">
+        <a href="/runner" class="back-link">← Back to Runners</a>
+        <h1><span class="icon">🏃</span> Runner: <span id="runner-id">{{ runner_id }}</span></h1>
+    </div>
+
+    <div class="runner-detail-grid">
+        <!-- Ticket Details -->
+        <div class="card ticket-details">
+            <div class="card-header">
+                <h2><span class="icon">🎫</span> Ticket Details</h2>
+            </div>
+            <div class="card-body">
+                <div class="detail-group">
+                    <span class="label">Ticket ID:</span>
+                    <span id="ticket-id" class="value">-</span>
+                </div>
+                <div class="detail-group">
+                    <span class="label">Title:</span>
+                    <span id="ticket-title" class="value">-</span>
+                </div>
+                <div class="detail-group">
+                    <span class="label">Description:</span>
+                    <p id="ticket-description" class="value">-</p>
+                </div>
+                <div class="detail-group">
+                    <span class="label">Priority:</span>
+                    <span id="ticket-priority" class="value badge">-</span>
+                </div>
+                <div class="detail-group">
+                    <span class="label">Acceptance Criteria:</span>
+                    <ul id="acceptance-criteria" class="criteria-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Runtime Info -->
+        <div class="card runtime-info">
+            <div class="card-header">
+                <h2><span class="icon">⏱️</span> Runtime</h2>
+            </div>
+            <div class="card-body">
+                <div class="runtime-display">
+                    <span id="runtime-value" class="runtime-value">00:00:00</span>
+                </div>
+                <div class="runtime-details">
+                    <div class="detail-row">
+                        <span class="label">Started:</span>
+                        <span id="start-time" class="value">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status:</span>
+                        <span id="runner-status" class="value status-badge">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Control -->
+        <div class="card cancel-control">
+            <div class="card-header">
+                <h2><span class="icon">🛑</span> Control</h2>
+            </div>
+            <div class="card-body">
+                <button id="cancel-btn" class="btn btn-danger" onclick="cancelRunner()">
+                    Cancel Runner
+                </button>
+                <p class="help-text">Stop this runner's execution</p>
+            </div>
+        </div>
+
+        <!-- Live Logs -->
+        <div class="card live-logs">
+            <div class="card-header">
+                <h2><span class="icon">📝</span> Live Logs</h2>
+                <span id="log-count" class="badge">0 entries</span>
+            </div>
+            <div class="card-body">
+                <div id="logs-container" class="logs-container">
+                    <div class="logs-empty">Waiting for logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Touched -->
+        <div class="card files-touched">
+            <div class="card-header">
+                <h2><span class="icon">📁</span> Files Touched</h2>
+                <span id="files-count" class="badge">0 files</span>
+            </div>
+            <div class="card-body">
+                <ul id="files-list" class="files-list">
+                    <li class="files-empty">No files modified yet</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const RUNNER_ID = "{{ runner_id }}";
+</script>
+<script src="{{ url_for('static', filename='js/runner_detail.js') }}"></script>
+{% endblock %}

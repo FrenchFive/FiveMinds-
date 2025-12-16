@@ -4,6 +4,7 @@ Orchestrator - Main system that coordinates HeadMaster, Runners, and Reviewer
 
 import logging
 import concurrent.futures
+from dataclasses import asdict
 from typing import List, Dict, Optional
 from pathlib import Path
 
@@ -33,13 +34,17 @@ class FiveMinds:
     4. Integration of patches and final testing
     """
 
-    def __init__(self, repo_path: str, max_runners: int = 4):
+    def __init__(self, repo_path: str, max_runners: int = 4, enable_ui: bool = False, 
+                 ui_host: str = "127.0.0.1", ui_port: int = 5000):
         """
         Initialize the Five Minds system.
 
         Args:
             repo_path: Path to the repository
             max_runners: Maximum number of parallel runners
+            enable_ui: Whether to enable the web UI
+            ui_host: Host for UI server
+            ui_port: Port for UI server
         """
         self.repo_path = Path(repo_path)
         self.max_runners = max_runners
@@ -51,8 +56,57 @@ class FiveMinds:
         self.results: Dict[str, RunnerResult] = {}
         self.reviews: Dict[str, ReviewResult] = {}
         
+        # UI server
+        self.ui_server = None
+        self.enable_ui = enable_ui
+        if enable_ui:
+            from .ui import UIServer
+            self.ui_server = UIServer(host=ui_host, port=ui_port)
+        
         logger.info(f"Five Minds initialized for repository: {repo_path}")
         logger.info(f"Maximum parallel runners: {max_runners}")
+        if enable_ui:
+            logger.info(f"UI enabled at http://{ui_host}:{ui_port}")
+
+    def _ticket_to_dict(self, ticket: Ticket) -> dict:
+        """Convert ticket to dictionary for UI."""
+        return {
+            "id": ticket.id,
+            "title": ticket.title,
+            "description": ticket.description,
+            "acceptance_criteria": [
+                {"description": c.description, "met": c.met, "evidence": c.evidence}
+                for c in ticket.acceptance_criteria
+            ],
+            "status": ticket.status.value if ticket.status else "pending",
+            "priority": ticket.priority.value if ticket.priority else "medium",
+            "dependencies": ticket.dependencies,
+            "assigned_runner": ticket.assigned_runner,
+            "metadata": ticket.metadata
+        }
+
+    def _result_to_dict(self, result: RunnerResult) -> dict:
+        """Convert result to dictionary for UI."""
+        return {
+            "ticket_id": result.ticket_id,
+            "success": result.success,
+            "diff": result.diff,
+            "logs": result.logs,
+            "test_results": result.test_results,
+            "error_message": result.error_message,
+            "execution_time": result.execution_time
+        }
+
+    def _review_to_dict(self, review: ReviewResult) -> dict:
+        """Convert review to dictionary for UI."""
+        return {
+            "ticket_id": review.ticket_id,
+            "approved": review.approved,
+            "feedback": review.feedback,
+            "alignment_score": review.alignment_score,
+            "follow_up_tickets": [self._ticket_to_dict(t) for t in review.follow_up_tickets],
+            "suggestions": review.suggestions
+        }
 
     def execute(self, objective: Objective) -> dict:
         """
@@ -64,6 +118,16 @@ class FiveMinds:
         Returns:
             Dictionary with execution summary
         """
+        # Start UI server if enabled
+        if self.ui_server:
+            self.ui_server.start(background=True)
+            self.ui_server.set_objective({
+                "description": objective.description,
+                "requirements": objective.requirements,
+                "constraints": objective.constraints,
+                "success_metrics": objective.success_metrics
+            })
+        
         logger.info("="*60)
         logger.info("Five Minds Execution Started")
         logger.info("="*60)
@@ -73,30 +137,60 @@ class FiveMinds:
         logger.info("\n[Phase 1] HeadMaster Analysis")
         logger.info("-"*60)
         
+        if self.ui_server:
+            self.ui_server.set_status("analyzing")
+            self.ui_server.add_headmaster_reasoning("Starting repository analysis...")
+        
         # Analyze repository
         repo_context = self.headmaster.analyze_repository()
         logger.info(f"Repository analyzed: {len(repo_context.files)} files")
+        
+        if self.ui_server:
+            self.ui_server.add_headmaster_reasoning(f"Repository analyzed: {len(repo_context.files)} files, Languages: {', '.join(repo_context.languages)}")
         
         # Decompose objective into tickets
         self.tickets = self.headmaster.decompose_objective(objective)
         logger.info(f"Created {len(self.tickets)} tickets")
         
+        if self.ui_server:
+            self.ui_server.add_headmaster_reasoning(f"Decomposed objective into {len(self.tickets)} tickets")
+            self.ui_server.set_tickets([self._ticket_to_dict(t) for t in self.tickets])
+        
         # Identify dependencies
         self.tickets = self.headmaster.identify_dependencies(self.tickets)
+        
+        # Build dependency list for UI
+        dependencies = []
+        for ticket in self.tickets:
+            for dep_id in ticket.dependencies:
+                dependencies.append({"from": dep_id, "to": ticket.id})
+        
+        if self.ui_server:
+            self.ui_server.add_headmaster_reasoning("Identified ticket dependencies")
+            self.ui_server.set_dependencies(dependencies)
         
         # Optimize for parallel execution
         execution_waves = self.headmaster.optimize_parallelization(self.tickets)
         logger.info(f"Organized into {len(execution_waves)} execution wave(s)")
         
+        if self.ui_server:
+            self.ui_server.add_headmaster_reasoning(f"Organized into {len(execution_waves)} execution wave(s) for parallel processing")
+        
         # Phase 2: Runner Execution
         logger.info("\n[Phase 2] Runner Execution")
         logger.info("-"*60)
+        
+        if self.ui_server:
+            self.ui_server.set_status("executing")
         
         self._execute_tickets_in_waves(execution_waves)
         
         # Phase 3: Review
         logger.info("\n[Phase 3] Review")
         logger.info("-"*60)
+        
+        if self.ui_server:
+            self.ui_server.set_status("reviewing")
         
         self.reviewer = Reviewer(objective)
         self._review_results()
@@ -105,10 +199,20 @@ class FiveMinds:
         logger.info("\n[Phase 4] Integration & Testing")
         logger.info("-"*60)
         
+        if self.ui_server:
+            self.ui_server.set_status("integrating")
+            self.ui_server.update_headmaster("integration_status", "in_progress")
+        
         integration_result = self._integrate_and_test()
+        
+        if self.ui_server:
+            self.ui_server.update_headmaster("integration_status", integration_result["integration_status"])
         
         # Generate summary
         summary = self._generate_summary(objective, integration_result)
+        
+        if self.ui_server:
+            self.ui_server.set_status("completed" if summary["success"] else "failed")
         
         logger.info("\n" + "="*60)
         logger.info("Five Minds Execution Complete")
@@ -126,6 +230,9 @@ class FiveMinds:
         for wave_name, tickets in waves.items():
             logger.info(f"\nExecuting {wave_name}: {len(tickets)} ticket(s)")
             
+            if self.ui_server:
+                self.ui_server.add_progress(f"Starting {wave_name} with {len(tickets)} ticket(s)")
+            
             # Execute tickets in this wave in parallel
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_runners) as executor:
                 # Create runners
@@ -134,6 +241,11 @@ class FiveMinds:
                     runner = Runner(f"R{idx+1}", str(self.repo_path))
                     future = executor.submit(runner.execute_ticket, ticket)
                     futures[future] = (ticket, runner)
+                    
+                    # Update UI
+                    if self.ui_server:
+                        self.ui_server.add_runner(runner.runner_id, ticket.id)
+                        self.ui_server.update_ticket(ticket.id, {"status": "in_progress"})
                 
                 # Collect results
                 for future in concurrent.futures.as_completed(futures):
@@ -142,8 +254,21 @@ class FiveMinds:
                         result = future.result()
                         self.results[ticket.id] = result
                         logger.info(f"  ✓ {ticket.id} completed by {runner.runner_id}")
+                        
+                        # Update UI
+                        if self.ui_server:
+                            self.ui_server.complete_runner(runner.runner_id, self._result_to_dict(result))
+                            self.ui_server.update_ticket(ticket.id, {"status": "needs_review"})
                     except Exception as e:
                         logger.error(f"  ✗ {ticket.id} failed: {str(e)}")
+                        
+                        if self.ui_server:
+                            self.ui_server.complete_runner(runner.runner_id, {
+                                "ticket_id": ticket.id,
+                                "success": False,
+                                "error_message": str(e)
+                            })
+                            self.ui_server.update_ticket(ticket.id, {"status": "failed"})
                     finally:
                         runner.cleanup_sandbox()
 
@@ -181,10 +306,20 @@ class FiveMinds:
                        f"{'Approved' if review.approved else 'Rejected'} "
                        f"(score: {review.alignment_score:.2f})")
             
+            # Update UI
+            if self.ui_server:
+                self.ui_server.add_review(self._review_to_dict(review))
+                self.ui_server.update_ticket(ticket_id, {
+                    "status": "completed" if review.approved else "failed"
+                })
+            
             # Add follow-up tickets if any
             if review.follow_up_tickets:
                 self.tickets.extend(review.follow_up_tickets)
                 logger.info(f"    → {len(review.follow_up_tickets)} follow-up(s) created")
+                
+                if self.ui_server:
+                    self.ui_server.set_tickets([self._ticket_to_dict(t) for t in self.tickets])
 
     def _is_result_approved(self, ticket_id: str) -> bool:
         """

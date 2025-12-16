@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Runners - Five Minds{% endblock %}
+
+{% block content %}
+<div class="runners-page">
+    <div class="page-header">
+        <h1><span class="icon">🏃</span> Runner View</h1>
+        <p class="subtitle">Monitor and control active runners</p>
+    </div>
+
+    <!-- Active Runners -->
+    <div class="runners-grid" id="runners-container">
+        <div class="runners-empty card">
+            <div class="empty-state">
+                <span class="empty-icon">🏃</span>
+                <h3>No Active Runners</h3>
+                <p>Runners will appear here when executing tickets</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/runner.js') }}"></script>
+{% endblock %}

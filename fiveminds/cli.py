@@ -44,6 +44,9 @@ Examples:
     --requirement "Add login page" \\
     --requirement "Add user model" \\
     "Implement user authentication system"
+    
+  # Run with UI enabled
+  python -m fiveminds.cli --repo /path/to/repo --ui "Your objective"
         """
     )
     
@@ -87,6 +90,26 @@ Examples:
         help='Enable verbose logging'
     )
     
+    parser.add_argument(
+        '--ui',
+        action='store_true',
+        help='Enable web UI dashboard'
+    )
+    
+    parser.add_argument(
+        '--ui-host',
+        type=str,
+        default='127.0.0.1',
+        help='UI server host (default: 127.0.0.1)'
+    )
+    
+    parser.add_argument(
+        '--ui-port',
+        type=int,
+        default=5000,
+        help='UI server port (default: 5000)'
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -111,9 +134,19 @@ Examples:
     print(f"Repository: {repo_path}")
     print(f"Objective: {objective.description}")
     print(f"Requirements: {len(objective.requirements)}")
+    
+    if args.ui:
+        print(f"UI Dashboard: http://{args.ui_host}:{args.ui_port}")
+    
     print()
     
-    five_minds = FiveMinds(str(repo_path), max_runners=args.max_runners)
+    five_minds = FiveMinds(
+        str(repo_path), 
+        max_runners=args.max_runners,
+        enable_ui=args.ui,
+        ui_host=args.ui_host,
+        ui_port=args.ui_port
+    )
     
     # Execute
     try:
@@ -128,6 +161,17 @@ Examples:
         print(f"Reviews: {summary['review']['approved']}/{summary['review']['total_reviews']} approved")
         print(f"Alignment: {summary['review']['average_alignment_score']:.2%}")
         print("="*60)
+        
+        if args.ui:
+            print(f"\n📊 UI Dashboard available at: http://{args.ui_host}:{args.ui_port}")
+            print("Press Ctrl+C to stop the server...")
+            try:
+                # Keep the server running
+                import time
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nShutting down...")
         
         return 0 if summary['success'] else 1
         
