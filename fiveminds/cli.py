@@ -213,10 +213,7 @@ Examples:
     
     # Get objective
     if args.interactive:
-        # Auto-enable UI in interactive mode
-        args.ui = True
-        
-        # If UI is enabled, we'll get the objective from the UI
+        # If UI is explicitly enabled, get objective from UI
         # Otherwise, use console interactive mode
         if args.ui:
             objective = None  # Will be set by UI callback
