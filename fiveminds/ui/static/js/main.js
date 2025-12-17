@@ -11,6 +11,7 @@ let state = {};
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeSocket();
+    initializeChatInput();
     updateFooterTime();
     setInterval(updateFooterTime, 1000);
 });
@@ -54,6 +55,8 @@ function initializeSocket() {
         if (typeof onStatusUpdate === 'function') {
             onStatusUpdate(data);
         }
+        // Handle task queue processing when status becomes idle
+        handleStatusChangeForQueue(data);
     });
 
     socket.on('progress_update', function(data) {
@@ -250,9 +253,10 @@ function formatDiff(diff) {
 let taskQueue = [];
 
 /**
- * Initialize floating chat input
+ * Initialize floating chat input and autonomous mode
+ * Called from main DOMContentLoaded handler
  */
-document.addEventListener('DOMContentLoaded', function() {
+function initializeChatInput() {
     const chatForm = document.getElementById('objective-chat-form');
     const autonomousToggle = document.getElementById('autonomous-mode-toggle');
     
@@ -269,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
             autonomousToggle.checked = savedState === 'true';
         }
     }
-});
+}
 
 /**
  * Handle objective submission from chat input
@@ -328,9 +332,9 @@ async function submitNextTask() {
             },
             body: JSON.stringify({
                 description: task.description,
-                requirements: [task.description],
-                constraints: [],
-                success_metrics: ["All acceptance criteria met", "All tests pass"]
+                requirements: task.requirements || [],
+                constraints: task.constraints || [],
+                success_metrics: task.success_metrics || ["All acceptance criteria met", "All tests pass"]
             })
         });
         
@@ -392,19 +396,9 @@ function handleAutonomousModeToggle(event) {
 }
 
 /**
- * Show notification (simple implementation)
+ * Handle status changes for task queue processing
  */
-function showNotification(message, type = 'info') {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    
-    // You can implement a toast notification system here
-    // For now, we'll just log to console
-}
-
-/**
- * Listen for status changes to process queue
- */
-socket?.on('status_update', function(status) {
+function handleStatusChangeForQueue(status) {
     // If system becomes idle and autonomous mode is on, process next task
     const autonomousMode = document.getElementById('autonomous-mode-toggle')?.checked;
     
@@ -413,4 +407,14 @@ socket?.on('status_update', function(status) {
             submitNextTask();
         }, 2000); // Wait 2 seconds before submitting next task
     }
-});
+}
+
+/**
+ * Show notification (simple implementation)
+ */
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // TODO: Implement visual toast notification system
+    // For now, we'll just log to console
+}
