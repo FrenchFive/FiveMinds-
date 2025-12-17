@@ -292,13 +292,13 @@ five_minds = FiveMinds(repo_path=".", enable_ui=True)
 ### UI Screenshots
 
 **Dashboard View**
-![Dashboard](https://github.com/user-attachments/assets/100afdf7-414f-46fc-aed1-65413d88a96e)
+![Dashboard](https://github.com/user-attachments/assets/4d511440-9238-43b7-b445-3fbd271f61f5)
 
 **HeadMaster View**
-![HeadMaster](https://github.com/user-attachments/assets/2cb86d4b-98bc-4f20-8340-72aad14c03be)
+![HeadMaster](https://github.com/user-attachments/assets/0600b1cb-1d69-4adc-bfc6-e3ef8ef0a752)
 
 **Review View**
-![Review](https://github.com/user-attachments/assets/9782c964-e269-4494-a5f0-3501e9820dd8)
+![Review](https://github.com/user-attachments/assets/e6fe2c79-d26f-4b54-8a1c-174ec23a1665)
 
 ## Features
 
