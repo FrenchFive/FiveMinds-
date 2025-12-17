@@ -295,26 +295,6 @@ function onObjectiveUpdate(objective) {
 }
 
 /**
- * Focus on objective input and scroll to it
- */
-function focusObjectiveInput() {
-    const input = document.getElementById('objective-input');
-    const floatingContainer = document.querySelector('.floating-chat-container');
-    
-    if (input) {
-        input.focus();
-        
-        // Add a pulse animation to draw attention
-        if (floatingContainer) {
-            floatingContainer.classList.add('pulse-attention');
-            setTimeout(() => {
-                floatingContainer.classList.remove('pulse-attention');
-            }, 1000);
-        }
-    }
-}
-
-/**
  * Handle status update
  */
 function onStatusUpdate(status) {

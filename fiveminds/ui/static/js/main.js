@@ -560,6 +560,27 @@ function closeSuccessModal() {
 }
 
 /**
+ * Focus on objective input and scroll to it
+ * This function is used by the "Set objective" button on dashboard
+ */
+function focusObjectiveInput() {
+    const input = document.getElementById('objective-input');
+    const floatingContainer = document.querySelector('.floating-chat-container');
+    
+    if (input) {
+        input.focus();
+        
+        // Add a pulse animation to draw attention
+        if (floatingContainer) {
+            floatingContainer.classList.add('pulse-attention');
+            setTimeout(() => {
+                floatingContainer.classList.remove('pulse-attention');
+            }, 1000);
+        }
+    }
+}
+
+/**
  * Show notification (simple implementation)
  */
 function showNotification(message, type = 'info') {
