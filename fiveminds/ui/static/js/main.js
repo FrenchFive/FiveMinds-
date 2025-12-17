@@ -7,14 +7,20 @@
 let socket = null;
 let connected = false;
 let state = {};
+let selectedRepoPath = '';
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeSocket();
-    initializeChatInput();
-    initializeObjectiveModal();
+    initializeCommandBar();
     updateFooterTime();
     setInterval(updateFooterTime, 1000);
+    
+    // Load saved repo path
+    const savedRepo = localStorage.getItem('selectedRepoPath');
+    if (savedRepo) {
+        setRepoPath(savedRepo);
+    }
 });
 
 /**
@@ -260,10 +266,9 @@ function formatDiff(diff) {
 let taskQueue = [];
 
 /**
- * Initialize floating chat input and autonomous mode
- * Called from main DOMContentLoaded handler
+ * Initialize command bar and autonomous mode
  */
-function initializeChatInput() {
+function initializeCommandBar() {
     const chatForm = document.getElementById('objective-chat-form');
     const autonomousToggle = document.getElementById('autonomous-mode-toggle');
     
@@ -283,119 +288,34 @@ function initializeChatInput() {
 }
 
 /**
- * Initialize objective modal
+ * Select repository path
  */
-function initializeObjectiveModal() {
-    const modal = document.getElementById('objective-modal');
-    const modalForm = document.getElementById('objective-modal-form');
+function selectRepo() {
+    // Prompt user for repository path (in a real app this would be a file picker)
+    const path = prompt('Enter the path to your local repository:', selectedRepoPath || '/path/to/repo');
     
-    // Close modal when clicking outside
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeObjectiveModal();
-            }
-        });
-    }
-    
-    // Handle Enter key in description textarea
-    const descriptionTextarea = document.getElementById('modal-objective-description');
-    if (descriptionTextarea) {
-        descriptionTextarea.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                confirmObjective();
-            }
-        });
+    if (path && path.trim()) {
+        setRepoPath(path.trim());
+        showNotification(`Repository set: ${path.trim()}`, 'success');
     }
 }
 
 /**
- * Open objective modal with pre-filled description
+ * Set the repository path
  */
-function openObjectiveModal(description) {
-    const modal = document.getElementById('objective-modal');
-    const descriptionTextarea = document.getElementById('modal-objective-description');
+function setRepoPath(path) {
+    selectedRepoPath = path;
+    localStorage.setItem('selectedRepoPath', path);
     
-    if (modal) {
-        modal.classList.add('active');
-        
-        if (descriptionTextarea && description) {
-            descriptionTextarea.value = description;
-        }
-        
-        // Focus on description if empty, otherwise on confirm button
-        if (descriptionTextarea) {
-            setTimeout(() => descriptionTextarea.focus(), 100);
-        }
+    const repoPathEl = document.getElementById('repo-path');
+    if (repoPathEl) {
+        repoPathEl.textContent = path;
+        repoPathEl.classList.add('selected');
     }
 }
 
 /**
- * Close objective modal
- */
-function closeObjectiveModal() {
-    const modal = document.getElementById('objective-modal');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
-
-/**
- * Confirm and submit objective from modal
- */
-async function confirmObjective() {
-    const description = document.getElementById('modal-objective-description')?.value?.trim();
-    const constraintsText = document.getElementById('modal-objective-constraints')?.value?.trim();
-    const scope = document.getElementById('modal-objective-scope')?.value || 'normal';
-    const autonomy = document.querySelector('input[name="autonomy"]:checked')?.value || 'full';
-    
-    if (!description) {
-        showNotification('Please enter an objective description', 'error');
-        return;
-    }
-    
-    // Parse constraints (one per line)
-    const constraints = constraintsText ? 
-        constraintsText.split('\n').map(c => c.trim()).filter(c => c) : [];
-    
-    // Close modal
-    closeObjectiveModal();
-    
-    // Submit objective
-    try {
-        const response = await fetch('/api/objective', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                description: description,
-                requirements: [],
-                constraints: constraints,
-                success_metrics: ["All acceptance criteria met", "All tests pass"],
-                scope: scope,
-                autonomy: autonomy
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            showNotification(`Objective started: ${description}`);
-            // Clear the input
-            const input = document.getElementById('objective-input');
-            if (input) input.value = '';
-        } else {
-            showNotification(`Failed to submit objective: ${result.message}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error submitting objective:', error);
-        showNotification(`Error submitting objective: ${error.message}`, 'error');
-    }
-}
-
-/**
- * Handle objective submission from chat input
+ * Handle objective submission - direct submit without modal
  */
 async function handleObjectiveSubmit(event) {
     event.preventDefault();
@@ -404,11 +324,44 @@ async function handleObjectiveSubmit(event) {
     const objective = input.value.trim();
     
     if (!objective) {
+        showNotification('Please enter an objective', 'error');
         return;
     }
     
-    // Open modal with the objective pre-filled
-    openObjectiveModal(objective);
+    if (!selectedRepoPath) {
+        showNotification('Please select a repository first', 'warning');
+        selectRepo();
+        return;
+    }
+    
+    // Submit objective directly
+    try {
+        const response = await fetch('/api/objective', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: objective,
+                requirements: [],
+                constraints: [],
+                success_metrics: ["All acceptance criteria met", "All tests pass"],
+                repo_path: selectedRepoPath
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(`Started: ${objective}`, 'success');
+            input.value = '';
+        } else {
+            showNotification(`Failed: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting objective:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
 }
 
 /**
@@ -565,16 +518,16 @@ function closeSuccessModal() {
  */
 function focusObjectiveInput() {
     const input = document.getElementById('objective-input');
-    const floatingContainer = document.querySelector('.floating-chat-container');
+    const commandBarContainer = document.querySelector('.command-bar-container');
     
     if (input) {
         input.focus();
         
         // Add a pulse animation to draw attention
-        if (floatingContainer) {
-            floatingContainer.classList.add('pulse-attention');
+        if (commandBarContainer) {
+            commandBarContainer.classList.add('pulse-attention');
             setTimeout(() => {
-                floatingContainer.classList.remove('pulse-attention');
+                commandBarContainer.classList.remove('pulse-attention');
             }, 1000);
         }
     }

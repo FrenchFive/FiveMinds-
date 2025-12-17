@@ -2156,18 +2156,36 @@ a:hover {
     font-weight: 500;
 }
 
-/* ===== Floating Chat Input ===== */
-.floating-chat-container {
+/* ===== Command Bar - Primary Action Area ===== */
+.command-bar-backdrop {
     position: fixed;
-    bottom: 2rem;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    background: linear-gradient(to top, 
+        rgba(243, 247, 246, 0.98) 0%, 
+        rgba(243, 247, 246, 0.95) 40%,
+        rgba(243, 247, 246, 0.7) 70%,
+        rgba(243, 247, 246, 0) 100%
+    );
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    z-index: 999;
+    pointer-events: none;
+}
+
+.command-bar-container {
+    position: fixed;
+    bottom: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;
-    max-width: 800px;
+    width: 95%;
+    max-width: 720px;
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .task-queue-indicator {
@@ -2186,34 +2204,74 @@ a:hover {
     font-size: 1rem;
 }
 
-.objective-chat-form {
+.command-bar {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     background: var(--surface);
-    border-radius: 9999px;
-    padding: 0.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    box-shadow: 
+        0 0 0 1px rgba(0, 0, 0, 0.04),
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        0 8px 20px rgba(0, 0, 0, 0.1);
     transition: all var(--transition-fast);
 }
 
-.objective-chat-form:focus-within {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+.command-bar:focus-within {
+    box-shadow: 
+        0 0 0 2px var(--primary-color),
+        0 24px 60px rgba(0, 0, 0, 0.18),
+        0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
-/* Pulse attention animation for floating input */
-.floating-chat-container.pulse-attention .objective-chat-form {
-    animation: pulse-attention 0.5s ease-in-out 2;
+/* Repository Selector */
+.repo-selector {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bg-secondary);
 }
 
-@keyframes pulse-attention {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-    50% {
-        transform: scale(1.02);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
+.repo-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+}
+
+.repo-btn:hover {
+    background: var(--bg-secondary);
+}
+
+.repo-icon {
+    font-size: 1rem;
+}
+
+.repo-path {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.repo-path.selected {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Objective Form */
+.objective-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .objective-input {
@@ -2221,132 +2279,65 @@ a:hover {
     background: transparent;
     border: none;
     color: var(--text-primary);
-    font-size: 1rem;
-    padding: 0.75rem 1rem;
+    font-size: 1.125rem;
+    padding: 0.75rem 0.5rem;
     outline: none;
+    font-weight: 500;
 }
 
 .objective-input::placeholder {
     color: var(--text-muted);
+    font-weight: 400;
 }
 
-.send-btn {
-    background: var(--text-primary);
-    border: none;
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
+.start-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.5rem;
+    background: var(--text-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.25rem;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.send-btn:hover {
+.start-btn:hover {
     background: var(--success-color);
-    transform: scale(1.05);
+    transform: translateY(-1px);
 }
 
-.send-btn:active {
-    transform: scale(0.95);
+.start-btn:active {
+    transform: translateY(0);
 }
 
-.send-icon {
-    font-size: 1.25rem;
-    color: var(--surface);
-    font-weight: 600;
-}
-
-/* ===== Objective Creation Modal ===== */
-.objective-modal-content {
-    max-width: 560px;
-}
-
-.objective-textarea {
-    width: 100%;
-    padding: var(--spacing-md);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: none;
-    border-radius: var(--radius-sm);
+.start-text {
     font-size: 0.9375rem;
-    font-family: inherit;
-    resize: vertical;
-    line-height: 1.5;
+    font-weight: 600;
+    color: var(--surface);
 }
 
-.objective-textarea:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--text-primary);
+.start-icon {
+    font-size: 1rem;
+    color: var(--surface);
 }
 
-.objective-textarea::placeholder {
-    color: var(--text-muted);
+/* Pulse attention animation for command bar */
+.command-bar-container.pulse-attention .command-bar {
+    animation: pulse-attention 0.5s ease-in-out 2;
 }
 
-.optional-label {
-    font-weight: 400;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-}
-
-.scope-select {
-    width: 100%;
-    padding: var(--spacing-md);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    cursor: pointer;
-}
-
-.scope-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--text-primary);
-}
-
-.autonomy-options {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.autonomy-option {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.autonomy-option:hover {
-    background: var(--bg-secondary);
-}
-
-.autonomy-option input[type="radio"] {
-    margin-top: 4px;
-    accent-color: var(--text-primary);
-}
-
-.autonomy-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.autonomy-label strong {
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.autonomy-desc {
-    color: var(--text-muted);
-    font-size: 0.75rem;
+@keyframes pulse-attention {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.01);
+        box-shadow: 
+            0 0 0 3px var(--primary-color),
+            0 24px 60px rgba(0, 0, 0, 0.2),
+            0 12px 28px rgba(0, 0, 0, 0.15);
+    }
 }
 
 /* ===== Success Modal ===== */
@@ -2485,13 +2476,26 @@ a:hover {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .floating-chat-container {
+    .command-bar-container {
         width: 95%;
         bottom: 1rem;
     }
     
+    .command-bar {
+        padding: 0.5rem;
+    }
+    
     .objective-input {
-        font-size: 0.9rem;
+        font-size: 1rem;
+    }
+    
+    .start-text {
+        display: none;
+    }
+    
+    .start-btn {
+        padding: 0.75rem;
+        border-radius: 50%;
     }
     
     .success-stats {
