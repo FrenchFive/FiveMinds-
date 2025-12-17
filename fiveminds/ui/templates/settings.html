@@ -6,27 +6,25 @@
 <div class="settings-page">
     <!-- Header -->
     <div class="settings-header">
-        <h1><span class="icon">⚙️</span> Settings</h1>
+        <h1>Settings</h1>
         <p class="settings-subtitle">Configure API keys and AI model parameters</p>
     </div>
 
     <!-- API Keys Section -->
     <div class="settings-section card">
         <div class="card-header">
-            <h2><span class="icon">🔑</span> API Keys</h2>
+            <h2>API keys</h2>
         </div>
         <div class="card-body">
             <form id="api-keys-form" class="settings-form">
                 <!-- OpenAI -->
                 <div class="form-group">
-                    <label for="openai-key">
-                        <span class="provider-icon">🤖</span> OpenAI API Key
-                    </label>
+                    <label for="openai-key">OpenAI API Key</label>
                     <div class="input-group">
                         <input type="password" id="openai-key" name="openai_key" 
                                placeholder="sk-..." autocomplete="off">
                         <button type="button" class="btn btn-small toggle-visibility" data-target="openai-key">
-                            👁️
+                            Show
                         </button>
                     </div>
                     <span class="form-hint">Used for GPT-4, GPT-3.5-turbo models</span>
@@ -34,14 +32,12 @@
 
                 <!-- Anthropic -->
                 <div class="form-group">
-                    <label for="anthropic-key">
-                        <span class="provider-icon">🧠</span> Anthropic API Key
-                    </label>
+                    <label for="anthropic-key">Anthropic API Key</label>
                     <div class="input-group">
                         <input type="password" id="anthropic-key" name="anthropic_key" 
                                placeholder="sk-ant-..." autocomplete="off">
                         <button type="button" class="btn btn-small toggle-visibility" data-target="anthropic-key">
-                            👁️
+                            Show
                         </button>
                     </div>
                     <span class="form-hint">Used for Claude models</span>
@@ -49,14 +45,12 @@
 
                 <!-- Google -->
                 <div class="form-group">
-                    <label for="google-key">
-                        <span class="provider-icon">🔷</span> Google AI API Key
-                    </label>
+                    <label for="google-key">Google AI API Key</label>
                     <div class="input-group">
                         <input type="password" id="google-key" name="google_key" 
                                placeholder="AIza..." autocomplete="off">
                         <button type="button" class="btn btn-small toggle-visibility" data-target="google-key">
-                            👁️
+                            Show
                         </button>
                     </div>
                     <span class="form-hint">Used for Gemini models</span>
@@ -64,14 +58,12 @@
 
                 <!-- Cohere -->
                 <div class="form-group">
-                    <label for="cohere-key">
-                        <span class="provider-icon">💫</span> Cohere API Key
-                    </label>
+                    <label for="cohere-key">Cohere API Key</label>
                     <div class="input-group">
                         <input type="password" id="cohere-key" name="cohere_key" 
                                placeholder="..." autocomplete="off">
                         <button type="button" class="btn btn-small toggle-visibility" data-target="cohere-key">
-                            👁️
+                            Show
                         </button>
                     </div>
                     <span class="form-hint">Used for Command models</span>
@@ -79,9 +71,7 @@
 
                 <!-- Custom/Local -->
                 <div class="form-group">
-                    <label for="custom-endpoint">
-                        <span class="provider-icon">🔧</span> Custom API Endpoint
-                    </label>
+                    <label for="custom-endpoint">Custom API Endpoint</label>
                     <div class="input-group">
                         <input type="text" id="custom-endpoint" name="custom_endpoint" 
                                placeholder="http://localhost:11434/api">
@@ -95,13 +85,13 @@
     <!-- Model Configuration Section -->
     <div class="settings-section card">
         <div class="card-header">
-            <h2><span class="icon">🎛️</span> Model Configuration</h2>
+            <h2>Model configuration</h2>
         </div>
         <div class="card-body">
             <form id="model-config-form" class="settings-form">
                 <!-- HeadMaster Model -->
                 <div class="form-group">
-                    <label for="headmaster-model">HeadMaster Model</label>
+                    <label for="headmaster-model">HeadMaster model</label>
                     <select id="headmaster-model" name="headmaster_model">
                         <option value="gpt-4">GPT-4 (OpenAI)</option>
                         <option value="gpt-4-turbo">GPT-4 Turbo (OpenAI)</option>
@@ -116,7 +106,7 @@
 
                 <!-- Runner Model -->
                 <div class="form-group">
-                    <label for="runner-model">Runner Model</label>
+                    <label for="runner-model">Runner model</label>
                     <select id="runner-model" name="runner_model">
                         <option value="gpt-4">GPT-4 (OpenAI)</option>
                         <option value="gpt-4-turbo">GPT-4 Turbo (OpenAI)</option>
@@ -131,7 +121,7 @@
 
                 <!-- Reviewer Model -->
                 <div class="form-group">
-                    <label for="reviewer-model">Reviewer Model</label>
+                    <label for="reviewer-model">Reviewer model</label>
                     <select id="reviewer-model" name="reviewer_model">
                         <option value="gpt-4">GPT-4 (OpenAI)</option>
                         <option value="gpt-4-turbo">GPT-4 Turbo (OpenAI)</option>
@@ -157,7 +147,7 @@
 
                 <!-- Max Tokens -->
                 <div class="form-group">
-                    <label for="max-tokens">Max Tokens</label>
+                    <label for="max-tokens">Max tokens</label>
                     <input type="number" id="max-tokens" name="max_tokens" 
                            value="4096" min="100" max="32000">
                     <span class="form-hint">Maximum number of tokens per response</span>
@@ -169,10 +159,10 @@
     <!-- Actions -->
     <div class="settings-actions">
         <button type="button" id="save-settings" class="btn btn-primary">
-            💾 Save Settings
+            Save settings
         </button>
         <button type="button" id="reset-settings" class="btn btn-secondary">
-            🔄 Reset to Defaults
+            Reset to defaults
         </button>
         <span id="settings-status" class="settings-status"></span>
     </div>

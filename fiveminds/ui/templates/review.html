@@ -5,14 +5,14 @@
 {% block content %}
 <div class="review-page">
     <div class="page-header">
-        <h1><span class="icon">🔍</span> Review View</h1>
+        <h1>Review</h1>
         <p class="subtitle">Review results and manage follow-up tickets</p>
     </div>
 
     <!-- Review Summary -->
     <div class="review-summary card">
         <div class="card-header">
-            <h2><span class="icon">📊</span> Review Summary</h2>
+            <h2>Summary</h2>
         </div>
         <div class="card-body">
             <div class="summary-grid">
@@ -30,7 +30,7 @@
                 </div>
                 <div class="summary-item alignment">
                     <span class="summary-value" id="avg-alignment">0%</span>
-                    <span class="summary-label">Avg Alignment</span>
+                    <span class="summary-label">Avg alignment</span>
                 </div>
             </div>
         </div>
@@ -39,21 +39,20 @@
     <!-- Reviews List -->
     <div class="reviews-list card">
         <div class="card-header">
-            <h2><span class="icon">📋</span> Reviews</h2>
+            <h2>Reviews</h2>
             <div class="filter-controls">
                 <select id="review-filter" class="filter-select">
-                    <option value="all">All Reviews</option>
-                    <option value="approved">Approved Only</option>
-                    <option value="rejected">Rejected Only</option>
+                    <option value="all">All reviews</option>
+                    <option value="approved">Approved only</option>
+                    <option value="rejected">Rejected only</option>
                 </select>
             </div>
         </div>
         <div class="card-body">
             <div id="reviews-container" class="reviews-container">
                 <div class="reviews-empty">
-                    <span class="empty-icon">🔍</span>
-                    <h3>No Reviews Yet</h3>
-                    <p>Reviews will appear here after runner execution completes</p>
+                    <p>No reviews yet</p>
+                    <span class="empty-hint">Reviews will appear here after runner execution completes.</span>
                 </div>
             </div>
         </div>
@@ -62,15 +61,14 @@
     <!-- Follow-up Tickets -->
     <div class="follow-ups card">
         <div class="card-header">
-            <h2><span class="icon">📝</span> Follow-up Tickets</h2>
-            <button id="create-followup-btn" class="btn btn-primary" onclick="openFollowUpModal()">
-                + Create Follow-up
+            <h2>Follow-up tickets</h2>
+            <button id="create-followup-btn" class="btn btn-primary btn-small" onclick="openFollowUpModal()">
+                Create follow-up
             </button>
         </div>
         <div class="card-body">
             <div id="followups-container" class="followups-container">
                 <div class="followups-empty">
-                    <span class="empty-icon">📝</span>
                     <p>No follow-up tickets created</p>
                 </div>
             </div>
@@ -82,21 +80,21 @@
 <div id="followup-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Create Follow-up Ticket</h2>
+            <h2>Create follow-up ticket</h2>
             <button class="modal-close" onclick="closeFollowUpModal()">&times;</button>
         </div>
         <div class="modal-body">
             <form id="followup-form">
                 <div class="form-group">
-                    <label for="followup-title">Title:</label>
+                    <label for="followup-title">Title</label>
                     <input type="text" id="followup-title" required placeholder="Enter ticket title">
                 </div>
                 <div class="form-group">
-                    <label for="followup-description">Description:</label>
+                    <label for="followup-description">Description</label>
                     <textarea id="followup-description" required placeholder="Enter description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="followup-priority">Priority:</label>
+                    <label for="followup-priority">Priority</label>
                     <select id="followup-priority">
                         <option value="low">Low</option>
                         <option value="medium" selected>Medium</option>
@@ -105,7 +103,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="followup-parent">Parent Ticket:</label>
+                    <label for="followup-parent">Parent ticket</label>
                     <select id="followup-parent">
                         <option value="">None</option>
                     </select>
@@ -114,7 +112,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeFollowUpModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="submitFollowUp()">Create Ticket</button>
+            <button class="btn btn-primary" onclick="submitFollowUp()">Create ticket</button>
         </div>
     </div>
 </div>
