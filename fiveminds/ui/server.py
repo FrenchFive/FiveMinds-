@@ -428,7 +428,7 @@ class UIServer:
                                         })
                                         if len(results) >= max_results:
                                             break
-                        except:
+                        except (OSError, UnicodeDecodeError):
                             pass
                         
                         if len(results) >= max_results:
@@ -468,12 +468,14 @@ class UIServer:
                 
                 # Security: ensure the path is within the workspace
                 real_workspace = os.path.realpath(workspace)
-                real_filepath = os.path.realpath(os.path.dirname(full_path) or workspace)
+                real_filepath = os.path.realpath(full_path)
                 if not real_filepath.startswith(real_workspace):
                     return jsonify({"success": False, "message": "Access denied: path outside workspace"}), 403
                 
                 # Create directory if needed
-                os.makedirs(os.path.dirname(full_path), exist_ok=True) if os.path.dirname(full_path) else None
+                dir_path = os.path.dirname(full_path)
+                if dir_path:
+                    os.makedirs(dir_path, exist_ok=True)
                 
                 with open(full_path, 'w', encoding='utf-8') as f:
                     f.write(content)
@@ -522,7 +524,7 @@ class UIServer:
         try:
             import os
             return os.path.isdir(path) and os.access(path, os.R_OK)
-        except:
+        except (OSError, PermissionError):
             return False
 
     def _emit_update(self, event: str, data: Any):
