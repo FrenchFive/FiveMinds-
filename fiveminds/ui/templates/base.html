@@ -55,23 +55,55 @@
         <span id="footer-time"></span>
     </footer>
 
-    <!-- Floating Chat Input -->
-    <div class="floating-chat-container">
+    <!-- Command Bar - Primary Action Area -->
+    <div class="command-bar-backdrop"></div>
+    <div class="command-bar-container">
         <div class="task-queue-indicator" id="task-queue-indicator" style="display: none;">
             <span id="queue-count">0</span> tasks in queue
         </div>
-        <form id="objective-chat-form" class="objective-chat-form">
-            <input 
-                type="text" 
-                id="objective-input" 
-                class="objective-input" 
-                placeholder="Enter a new objective for HeadMaster..." 
-                autocomplete="off"
-            />
-            <button type="submit" class="send-btn" title="Send Objective">
-                <span class="send-icon">→</span>
-            </button>
-        </form>
+        <div class="command-bar">
+            <div class="repo-selector">
+                <button type="button" class="repo-btn" id="repo-selector-btn" onclick="selectRepo()">
+                    <span class="repo-icon">📁</span>
+                    <span class="repo-path" id="repo-path">Select repository...</span>
+                </button>
+            </div>
+            <form id="objective-chat-form" class="objective-form">
+                <input 
+                    type="text" 
+                    id="objective-input" 
+                    class="objective-input" 
+                    placeholder="What should I build?" 
+                    autocomplete="off"
+                />
+                <button type="submit" class="start-btn" title="Start">
+                    <span class="start-text">Start</span>
+                    <span class="start-icon">→</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal for completed objectives -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content success-modal-content">
+            <div class="success-modal-body">
+                <div class="success-icon">✓</div>
+                <h2>Objective completed</h2>
+                <p id="success-objective-text" class="success-objective-text"></p>
+                <div class="success-stats">
+                    <div class="success-stat">
+                        <span id="success-tickets-count" class="success-stat-value">0</span>
+                        <span class="success-stat-label">Tickets completed</span>
+                    </div>
+                    <div class="success-stat">
+                        <span id="success-time-elapsed" class="success-stat-value">--:--</span>
+                        <span class="success-stat-label">Time elapsed</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="closeSuccessModal()">Continue</button>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

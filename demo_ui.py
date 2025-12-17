@@ -33,12 +33,18 @@ def populate_demo_data(server: UIServer):
     
     time.sleep(0.5)
     
-    # Add HeadMaster reasoning
+    # Add HeadMaster decisions (cleaner, more intentional output)
+    server.add_headmaster_reasoning("Objective parsed: Create REST API for user management")
+    time.sleep(0.3)
     server.add_headmaster_reasoning("Analyzing repository structure...")
     time.sleep(0.3)
     server.add_headmaster_reasoning("Detected Python project with Flask framework")
     time.sleep(0.3)
-    server.add_headmaster_reasoning("Decomposing objective into 4 tickets")
+    server.add_headmaster_reasoning("Planning tasks: 4 tickets identified")
+    time.sleep(0.3)
+    server.add_headmaster_reasoning("Dependencies resolved: TKT-001 → TKT-002 → TKT-003/TKT-004")
+    time.sleep(0.3)
+    server.add_headmaster_reasoning("Dispatching runners for wave 1")
     
     # Set tickets
     tickets = [

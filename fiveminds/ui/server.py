@@ -256,28 +256,237 @@ class UIServer:
             if not data.get("description"):
                 return jsonify({"success": False, "message": "Objective description is required"}), 400
             
-            # Store objective
+            # Store objective with workspace path
             objective = {
                 "description": data.get("description", ""),
                 "requirements": data.get("requirements", []),
                 "constraints": data.get("constraints", []),
-                "success_metrics": data.get("success_metrics", ["All acceptance criteria met", "All tests pass"])
+                "success_metrics": data.get("success_metrics", ["All acceptance criteria met", "All tests pass"]),
+                "repo_path": data.get("repo_path", "")
             }
             
             # Update state
             with self._lock:
                 self._state["objective"] = objective
+                self._state["workspace_path"] = objective["repo_path"]
                 self._state["status"] = "analyzing"
                 self._state["start_time"] = datetime.now().isoformat()
                 self._add_progress("New objective submitted: " + objective["description"])
+                if objective["repo_path"]:
+                    self._add_progress(f"Working in: {objective['repo_path']}")
             
             # Emit updates
             self._emit_update("objective_update", self._state["objective"])
             self._emit_update("status_update", self._state["status"])
+            self._emit_update("workspace_update", {"path": objective["repo_path"]})
             
             logger.info(f"New objective submitted: {objective['description']}")
             
             return jsonify({"success": True, "message": "Objective submitted successfully"})
+        
+        @self.app.route('/api/workspace', methods=['GET'])
+        def get_workspace():
+            """Get current workspace path."""
+            with self._lock:
+                return jsonify({
+                    "path": self._state.get("workspace_path", ""),
+                    "valid": self._is_valid_workspace(self._state.get("workspace_path", ""))
+                })
+        
+        @self.app.route('/api/workspace', methods=['POST'])
+        def set_workspace():
+            """Set workspace path."""
+            data = request.json
+            if not data or not data.get("path"):
+                return jsonify({"success": False, "message": "No path provided"}), 400
+            
+            workspace_path = data.get("path")
+            
+            # Validate path exists and is a directory
+            if not self._is_valid_workspace(workspace_path):
+                return jsonify({
+                    "success": False, 
+                    "message": f"Invalid workspace: {workspace_path} is not a valid directory"
+                }), 400
+            
+            with self._lock:
+                self._state["workspace_path"] = workspace_path
+                self._add_progress(f"Workspace set: {workspace_path}")
+            
+            self._emit_update("workspace_update", {"path": workspace_path, "valid": True})
+            return jsonify({"success": True, "message": f"Workspace set to {workspace_path}"})
+        
+        @self.app.route('/api/workspace/files')
+        def list_workspace_files():
+            """List files in the workspace (for HeadMaster to view code)."""
+            with self._lock:
+                workspace = self._state.get("workspace_path", "")
+            
+            if not workspace or not self._is_valid_workspace(workspace):
+                return jsonify({"success": False, "message": "No valid workspace set"}), 400
+            
+            try:
+                import os
+                files = []
+                for root, dirs, filenames in os.walk(workspace):
+                    # Skip hidden directories and common non-code directories
+                    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', '__pycache__', 'venv', '.git']]
+                    
+                    for filename in filenames:
+                        if not filename.startswith('.'):
+                            filepath = os.path.join(root, filename)
+                            relpath = os.path.relpath(filepath, workspace)
+                            files.append({
+                                "path": relpath,
+                                "name": filename,
+                                "size": os.path.getsize(filepath)
+                            })
+                
+                return jsonify({"success": True, "files": files, "workspace": workspace})
+            except Exception as e:
+                return jsonify({"success": False, "message": str(e)}), 500
+        
+        @self.app.route('/api/workspace/file')
+        def get_workspace_file():
+            """Get contents of a file in the workspace (for HeadMaster to read code)."""
+            with self._lock:
+                workspace = self._state.get("workspace_path", "")
+            
+            filepath = request.args.get("path", "")
+            if not filepath:
+                return jsonify({"success": False, "message": "No file path provided"}), 400
+            
+            if not workspace or not self._is_valid_workspace(workspace):
+                return jsonify({"success": False, "message": "No valid workspace set"}), 400
+            
+            try:
+                import os
+                full_path = os.path.join(workspace, filepath)
+                
+                # Security: ensure the path is within the workspace
+                real_workspace = os.path.realpath(workspace)
+                real_filepath = os.path.realpath(full_path)
+                if not real_filepath.startswith(real_workspace):
+                    return jsonify({"success": False, "message": "Access denied: path outside workspace"}), 403
+                
+                if not os.path.isfile(full_path):
+                    return jsonify({"success": False, "message": "File not found"}), 404
+                
+                with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+                    content = f.read()
+                
+                return jsonify({
+                    "success": True, 
+                    "path": filepath, 
+                    "content": content,
+                    "size": len(content)
+                })
+            except Exception as e:
+                return jsonify({"success": False, "message": str(e)}), 500
+        
+        @self.app.route('/api/workspace/grep', methods=['POST'])
+        def grep_workspace():
+            """Search for patterns in workspace files (for HeadMaster to grep code)."""
+            with self._lock:
+                workspace = self._state.get("workspace_path", "")
+            
+            data = request.json
+            if not data or not data.get("pattern"):
+                return jsonify({"success": False, "message": "No search pattern provided"}), 400
+            
+            if not workspace or not self._is_valid_workspace(workspace):
+                return jsonify({"success": False, "message": "No valid workspace set"}), 400
+            
+            try:
+                import os
+                import re
+                
+                pattern = data.get("pattern")
+                file_pattern = data.get("file_pattern", "*")
+                max_results = data.get("max_results", 100)
+                
+                results = []
+                for root, dirs, filenames in os.walk(workspace):
+                    # Skip hidden directories and common non-code directories
+                    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', '__pycache__', 'venv', '.git']]
+                    
+                    for filename in filenames:
+                        if filename.startswith('.'):
+                            continue
+                        
+                        filepath = os.path.join(root, filename)
+                        relpath = os.path.relpath(filepath, workspace)
+                        
+                        try:
+                            with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+                                for line_num, line in enumerate(f, 1):
+                                    if re.search(pattern, line, re.IGNORECASE):
+                                        results.append({
+                                            "file": relpath,
+                                            "line": line_num,
+                                            "content": line.strip()[:200]
+                                        })
+                                        if len(results) >= max_results:
+                                            break
+                        except (OSError, UnicodeDecodeError):
+                            pass
+                        
+                        if len(results) >= max_results:
+                            break
+                    
+                    if len(results) >= max_results:
+                        break
+                
+                return jsonify({
+                    "success": True, 
+                    "pattern": pattern, 
+                    "results": results,
+                    "count": len(results)
+                })
+            except Exception as e:
+                return jsonify({"success": False, "message": str(e)}), 500
+        
+        @self.app.route('/api/workspace/write', methods=['POST'])
+        def write_workspace_file():
+            """Write/update a file in the workspace (for runners to modify code)."""
+            with self._lock:
+                workspace = self._state.get("workspace_path", "")
+            
+            data = request.json
+            if not data or not data.get("path") or "content" not in data:
+                return jsonify({"success": False, "message": "Path and content required"}), 400
+            
+            if not workspace or not self._is_valid_workspace(workspace):
+                return jsonify({"success": False, "message": "No valid workspace set"}), 400
+            
+            try:
+                import os
+                filepath = data.get("path")
+                content = data.get("content")
+                
+                full_path = os.path.join(workspace, filepath)
+                
+                # Security: ensure the path is within the workspace
+                real_workspace = os.path.realpath(workspace)
+                real_filepath = os.path.realpath(full_path)
+                if not real_filepath.startswith(real_workspace):
+                    return jsonify({"success": False, "message": "Access denied: path outside workspace"}), 403
+                
+                # Create directory if needed
+                dir_path = os.path.dirname(full_path)
+                if dir_path:
+                    os.makedirs(dir_path, exist_ok=True)
+                
+                with open(full_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                
+                return jsonify({
+                    "success": True, 
+                    "path": filepath, 
+                    "message": f"File saved: {filepath}"
+                })
+            except Exception as e:
+                return jsonify({"success": False, "message": str(e)}), 500
 
     def _setup_socketio_handlers(self):
         """Setup WebSocket handlers."""
@@ -299,6 +508,24 @@ class UIServer:
             """Handle state request from client."""
             with self._lock:
                 emit('state_update', self._state)
+
+    def _is_valid_workspace(self, path: str) -> bool:
+        """
+        Check if a path is a valid workspace directory.
+        
+        Args:
+            path: Path to check
+            
+        Returns:
+            True if valid directory, False otherwise
+        """
+        if not path:
+            return False
+        try:
+            import os
+            return os.path.isdir(path) and os.access(path, os.R_OK)
+        except (OSError, PermissionError):
+            return False
 
     def _emit_update(self, event: str, data: Any):
         """

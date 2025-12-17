@@ -7,13 +7,20 @@
 let socket = null;
 let connected = false;
 let state = {};
+let selectedRepoPath = '';
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeSocket();
-    initializeChatInput();
+    initializeCommandBar();
     updateFooterTime();
     setInterval(updateFooterTime, 1000);
+    
+    // Load saved repo path and validate it
+    const savedRepo = localStorage.getItem('selectedRepoPath');
+    if (savedRepo) {
+        validateAndSetRepoPath(savedRepo);
+    }
 });
 
 /**
@@ -43,6 +50,8 @@ function initializeSocket() {
         if (typeof onStateUpdate === 'function') {
             onStateUpdate(data);
         }
+        // Check for completion
+        checkForCompletion(data);
     });
 
     socket.on('objective_update', function(data) {
@@ -57,6 +66,10 @@ function initializeSocket() {
         }
         // Handle task queue processing when status becomes idle
         handleStatusChangeForQueue(data);
+        // Check for completion
+        if (data === 'completed') {
+            showSuccessModal();
+        }
     });
 
     socket.on('progress_update', function(data) {
@@ -253,10 +266,9 @@ function formatDiff(diff) {
 let taskQueue = [];
 
 /**
- * Initialize floating chat input and autonomous mode
- * Called from main DOMContentLoaded handler
+ * Initialize command bar and autonomous mode
  */
-function initializeChatInput() {
+function initializeCommandBar() {
     const chatForm = document.getElementById('objective-chat-form');
     const autonomousToggle = document.getElementById('autonomous-mode-toggle');
     
@@ -276,7 +288,71 @@ function initializeChatInput() {
 }
 
 /**
- * Handle objective submission from chat input
+ * Select repository path
+ */
+function selectRepo() {
+    // Prompt user for repository path
+    const path = prompt('Enter the path to your local repository:\n\nExample: /Users/you/projects/my-app', selectedRepoPath || '');
+    
+    if (path && path.trim()) {
+        validateAndSetRepoPath(path.trim());
+    }
+}
+
+/**
+ * Validate and set repository path via server
+ */
+async function validateAndSetRepoPath(path) {
+    try {
+        const response = await fetch('/api/workspace', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: path })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            setRepoPath(path, true);
+            showNotification(`Workspace set: ${path}`, 'success');
+        } else {
+            showNotification(result.message || 'Invalid workspace path', 'error');
+            // Still set locally but mark as invalid
+            setRepoPath(path, false);
+        }
+    } catch (error) {
+        console.error('Error validating workspace:', error);
+        // Set locally anyway for offline use
+        setRepoPath(path, false);
+    }
+}
+
+/**
+ * Set the repository path
+ */
+function setRepoPath(path, valid = true) {
+    selectedRepoPath = path;
+    localStorage.setItem('selectedRepoPath', path);
+    
+    const repoPathEl = document.getElementById('repo-path');
+    const repoBtnEl = document.getElementById('repo-selector-btn');
+    
+    if (repoPathEl) {
+        // Show shortened path if too long
+        const displayPath = path.length > 40 ? '...' + path.slice(-37) : path;
+        repoPathEl.textContent = displayPath;
+        repoPathEl.classList.add('selected');
+        repoPathEl.title = path; // Show full path on hover
+    }
+    
+    if (repoBtnEl) {
+        repoBtnEl.classList.toggle('valid', valid);
+        repoBtnEl.classList.toggle('invalid', !valid);
+    }
+}
+
+/**
+ * Handle objective submission - direct submit without modal
  */
 async function handleObjectiveSubmit(event) {
     event.preventDefault();
@@ -285,31 +361,43 @@ async function handleObjectiveSubmit(event) {
     const objective = input.value.trim();
     
     if (!objective) {
+        showNotification('Please enter an objective', 'error');
         return;
     }
     
-    // Add to queue
-    taskQueue.push({
-        description: objective,
-        timestamp: new Date().toISOString(),
-        status: 'queued'
-    });
+    if (!selectedRepoPath) {
+        showNotification('Please select a repository first', 'warning');
+        selectRepo();
+        return;
+    }
     
-    // Clear input
-    input.value = '';
-    
-    // Update queue indicator
-    updateQueueIndicator();
-    
-    // If autonomous mode is enabled and system is idle, submit immediately
-    const autonomousMode = document.getElementById('autonomous-mode-toggle')?.checked;
-    const systemIdle = state.status === 'idle' || !state.status;
-    
-    if (autonomousMode && systemIdle && taskQueue.length === 1) {
-        submitNextTask();
-    } else {
-        // Show notification
-        showNotification(`Task "${objective}" added to queue (${taskQueue.length} tasks)`);
+    // Submit objective directly
+    try {
+        const response = await fetch('/api/objective', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: objective,
+                requirements: [],
+                constraints: [],
+                success_metrics: ["All acceptance criteria met", "All tests pass"],
+                repo_path: selectedRepoPath
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(`Started: ${objective}`, 'success');
+            input.value = '';
+        } else {
+            showNotification(`Failed: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting objective:', error);
+        showNotification(`Error: ${error.message}`, 'error');
     }
 }
 
@@ -410,11 +498,106 @@ function handleStatusChangeForQueue(status) {
 }
 
 /**
+ * Check for completion and show success modal
+ */
+function checkForCompletion(data) {
+    if (data.status === 'completed' && data.objective) {
+        // Store completion data for success modal
+        window.lastCompletedObjective = data.objective;
+        window.lastCompletedTickets = data.tickets || [];
+        window.lastCompletedStartTime = data.start_time;
+    }
+}
+
+/**
+ * Show success modal
+ */
+function showSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    const objectiveText = document.getElementById('success-objective-text');
+    const ticketsCount = document.getElementById('success-tickets-count');
+    const timeElapsed = document.getElementById('success-time-elapsed');
+    
+    if (!modal) return;
+    
+    // Populate modal with completion data
+    if (objectiveText && window.lastCompletedObjective) {
+        objectiveText.textContent = window.lastCompletedObjective.description || 'Objective';
+    }
+    
+    if (ticketsCount && window.lastCompletedTickets) {
+        const completed = window.lastCompletedTickets.filter(t => 
+            t.status === 'completed' || t.status === 'COMPLETED'
+        ).length;
+        ticketsCount.textContent = completed;
+    }
+    
+    if (timeElapsed && window.lastCompletedStartTime) {
+        timeElapsed.textContent = formatDuration(window.lastCompletedStartTime);
+    }
+    
+    modal.classList.add('active');
+}
+
+/**
+ * Close success modal
+ */
+function closeSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+/**
+ * Focus on objective input and scroll to it
+ * This function is used by the "Set objective" button on dashboard
+ */
+function focusObjectiveInput() {
+    const input = document.getElementById('objective-input');
+    const commandBarContainer = document.querySelector('.command-bar-container');
+    
+    if (input) {
+        input.focus();
+        
+        // Add a pulse animation to draw attention
+        if (commandBarContainer) {
+            commandBarContainer.classList.add('pulse-attention');
+            setTimeout(() => {
+                commandBarContainer.classList.remove('pulse-attention');
+            }, 1000);
+        }
+    }
+}
+
+/**
  * Show notification (simple implementation)
  */
 function showNotification(message, type = 'info') {
     console.log(`[${type.toUpperCase()}] ${message}`);
     
-    // TODO: Implement visual toast notification system
-    // For now, we'll just log to console
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    
+    // Add to document
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 4 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }

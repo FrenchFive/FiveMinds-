@@ -268,6 +268,7 @@ function onObjectiveUpdate(objective) {
     const reqEl = document.getElementById('objective-requirements');
     const constEl = document.getElementById('objective-constraints');
     const taskTitle = document.getElementById('current-task-title');
+    const objectiveCta = document.getElementById('objective-cta');
     
     if (descEl) {
         descEl.textContent = objective.description || 'No objective set';
@@ -285,6 +286,11 @@ function onObjectiveUpdate(objective) {
     if (constEl) {
         const count = objective.constraints ? objective.constraints.length : 0;
         constEl.textContent = `⚠️ ${count} constraint${count !== 1 ? 's' : ''}`;
+    }
+    
+    // Hide CTA when objective is set
+    if (objectiveCta) {
+        objectiveCta.style.display = objective.description ? 'none' : 'block';
     }
 }
 
