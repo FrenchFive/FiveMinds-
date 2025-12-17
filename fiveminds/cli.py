@@ -148,7 +148,15 @@ Examples:
     parser.add_argument(
         '--ui',
         action='store_true',
-        help='Enable web UI dashboard'
+        default=True,
+        help='Enable web UI dashboard (default: enabled, use --no-ui to disable)'
+    )
+    
+    parser.add_argument(
+        '--no-ui',
+        action='store_false',
+        dest='ui',
+        help='Disable web UI dashboard'
     )
     
     parser.add_argument(
@@ -187,6 +195,12 @@ Examples:
     )
     
     parser.add_argument(
+        '--auto-discover',
+        action='store_true',
+        help='Run in auto-discovery mode where HeadMaster autonomously finds tasks'
+    )
+    
+    parser.add_argument(
         '--user-name',
         type=str,
         default='FiveMinds',
@@ -212,12 +226,33 @@ Examples:
         return 1
     
     # Get objective
-    if args.interactive:
+    if args.auto_discover:
+        # Auto-discovery mode: HeadMaster will analyze the repository and create tasks
+        objective = Objective(
+            description="Analyze repository and autonomously create improvement tasks",
+            requirements=[
+                "Analyze code quality and identify improvements",
+                "Search for TODO/FIXME comments and create tasks",
+                "Identify potential optimizations",
+                "Check for missing tests or documentation",
+                "Suggest new features based on existing patterns"
+            ],
+            constraints=[
+                "Maintain existing functionality",
+                "Follow project coding standards",
+                "Ensure backward compatibility"
+            ],
+            success_metrics=[
+                "Repository analysis complete",
+                "Improvement tasks identified and prioritized",
+                "Tasks can be executed by runners"
+            ]
+        )
+        print(f"\n🔍 Auto-Discovery Mode: HeadMaster will analyze repository and create tasks")
+    elif args.interactive:
         objective = interactive_mode()
         if objective is None:
             return 1
-        # Auto-enable UI in interactive mode
-        args.ui = True
     elif args.objective:
         objective = Objective(
             description=args.objective,
@@ -226,7 +261,7 @@ Examples:
             success_metrics=["All acceptance criteria met", "All tests pass"]
         )
     else:
-        print("Error: Please provide an objective or use --interactive mode", file=sys.stderr)
+        print("Error: Please provide an objective, use --interactive mode, or --auto-discover", file=sys.stderr)
         parser.print_help()
         return 1
     
