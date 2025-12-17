@@ -8,6 +8,15 @@ const GRAPH_PADDING = 40;
 const NODE_RADIUS = 25;
 const DEFAULT_GRAPH_WIDTH = 600;
 
+// Decision entry types for cleaner output
+const DECISION_TYPES = {
+    parsing: { icon: '📋', class: 'decision-parsing' },
+    planning: { icon: '🧭', class: 'decision-planning' },
+    dispatching: { icon: '🚀', class: 'decision-dispatching' },
+    executing: { icon: '⚡', class: 'decision-executing' },
+    completed: { icon: '✅', class: 'decision-completed' }
+};
+
 /**
  * Handle full state update
  */
@@ -62,6 +71,44 @@ function onTicketsUpdate(tickets) {
 }
 
 /**
+ * Determine decision type from message
+ */
+function getDecisionType(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('pars') || lowerMessage.includes('analyz')) {
+        return DECISION_TYPES.parsing;
+    }
+    if (lowerMessage.includes('plan') || lowerMessage.includes('decompos') || lowerMessage.includes('ticket') || lowerMessage.includes('task')) {
+        return DECISION_TYPES.planning;
+    }
+    if (lowerMessage.includes('dispatch') || lowerMessage.includes('assign') || lowerMessage.includes('runner')) {
+        return DECISION_TYPES.dispatching;
+    }
+    if (lowerMessage.includes('execut') || lowerMessage.includes('running') || lowerMessage.includes('implement')) {
+        return DECISION_TYPES.executing;
+    }
+    if (lowerMessage.includes('complete') || lowerMessage.includes('done') || lowerMessage.includes('success') || lowerMessage.includes('finish')) {
+        return DECISION_TYPES.completed;
+    }
+    
+    return { icon: '•', class: '' };
+}
+
+/**
+ * Format decision entry for cleaner display
+ */
+function formatDecisionEntry(entry) {
+    const decisionType = getDecisionType(entry.message);
+    return {
+        icon: decisionType.icon,
+        className: decisionType.class,
+        message: entry.message,
+        timestamp: entry.timestamp
+    };
+}
+
+/**
  * Render reasoning log
  */
 function renderReasoningLog(logs) {
@@ -73,17 +120,20 @@ function renderReasoningLog(logs) {
     if (!logs || logs.length === 0) {
         container.innerHTML = `
             <div class="reasoning-empty">
-                <span class="empty-icon">🧠</span>
-                <p>No reasoning entries yet</p>
+                <p>No decisions yet</p>
+                <span class="empty-hint">Entries will appear as HeadMaster processes objectives.</span>
             </div>
         `;
     } else {
-        container.innerHTML = logs.map(entry => `
-            <div class="reasoning-entry">
-                <span class="reasoning-time">${formatTimestamp(entry.timestamp)}</span>
-                <span class="reasoning-message">${escapeHtml(entry.message)}</span>
-            </div>
-        `).join('');
+        container.innerHTML = logs.map(entry => {
+            const formatted = formatDecisionEntry(entry);
+            return `
+                <div class="reasoning-entry ${formatted.className}">
+                    <span class="reasoning-time">${formatTimestamp(entry.timestamp)}</span>
+                    <span class="reasoning-message"><span class="decision-icon">${formatted.icon}</span>${escapeHtml(entry.message)}</span>
+                </div>
+            `;
+        }).join('');
     }
     
     if (countEl) {
@@ -107,13 +157,17 @@ function addReasoningEntry(entry) {
         emptyState.remove();
     }
     
+    const formatted = formatDecisionEntry(entry);
     const entryEl = document.createElement('div');
-    entryEl.className = 'reasoning-entry';
+    entryEl.className = `reasoning-entry ${formatted.className}`;
     entryEl.innerHTML = `
         <span class="reasoning-time">${formatTimestamp(entry.timestamp)}</span>
-        <span class="reasoning-message">${escapeHtml(entry.message)}</span>
+        <span class="reasoning-message"><span class="decision-icon">${formatted.icon}</span>${escapeHtml(entry.message)}</span>
     `;
     container.appendChild(entryEl);
+    
+    // Auto-scroll to show new entry
+    container.scrollTop = container.scrollHeight;
     
     if (countEl) {
         const count = container.querySelectorAll('.reasoning-entry').length;

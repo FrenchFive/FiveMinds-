@@ -65,13 +65,105 @@
                 type="text" 
                 id="objective-input" 
                 class="objective-input" 
-                placeholder="Enter a new objective for HeadMaster..." 
+                placeholder="What should I build? Enter your objective..." 
                 autocomplete="off"
             />
             <button type="submit" class="send-btn" title="Send Objective">
                 <span class="send-icon">→</span>
             </button>
         </form>
+    </div>
+
+    <!-- Objective Creation Modal -->
+    <div id="objective-modal" class="modal">
+        <div class="modal-content objective-modal-content">
+            <div class="modal-header">
+                <h2>Define your objective</h2>
+                <button type="button" class="modal-close" onclick="closeObjectiveModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="objective-modal-form">
+                    <div class="form-group">
+                        <label for="modal-objective-description">What do you want to build?</label>
+                        <textarea 
+                            id="modal-objective-description" 
+                            class="objective-textarea"
+                            placeholder="Describe your objective clearly..."
+                            rows="3"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-objective-constraints">Constraints <span class="optional-label">(optional)</span></label>
+                        <textarea 
+                            id="modal-objective-constraints" 
+                            class="objective-textarea"
+                            placeholder="e.g., Use Python 3.8+, Follow existing code style..."
+                            rows="2"
+                        ></textarea>
+                        <span class="form-hint">One constraint per line</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-objective-scope">Scope <span class="optional-label">(optional)</span></label>
+                        <select id="modal-objective-scope" class="scope-select">
+                            <option value="normal">Normal - Standard task decomposition</option>
+                            <option value="minimal">Minimal - Single focused change</option>
+                            <option value="comprehensive">Comprehensive - Full feature implementation</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Autonomy level</label>
+                        <div class="autonomy-options">
+                            <label class="autonomy-option">
+                                <input type="radio" name="autonomy" value="full" checked>
+                                <span class="autonomy-label">
+                                    <strong>Full autonomy</strong>
+                                    <span class="autonomy-desc">HeadMaster handles everything automatically</span>
+                                </span>
+                            </label>
+                            <label class="autonomy-option">
+                                <input type="radio" name="autonomy" value="supervised">
+                                <span class="autonomy-label">
+                                    <strong>Supervised</strong>
+                                    <span class="autonomy-desc">Pause before executing each ticket</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeObjectiveModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmObjective()">
+                    Start execution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal for completed objectives -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content success-modal-content">
+            <div class="success-modal-body">
+                <div class="success-icon">✓</div>
+                <h2>Objective completed</h2>
+                <p id="success-objective-text" class="success-objective-text"></p>
+                <div class="success-stats">
+                    <div class="success-stat">
+                        <span id="success-tickets-count" class="success-stat-value">0</span>
+                        <span class="success-stat-label">Tickets completed</span>
+                    </div>
+                    <div class="success-stat">
+                        <span id="success-time-elapsed" class="success-stat-value">--:--</span>
+                        <span class="success-stat-label">Time elapsed</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="closeSuccessModal()">Continue</button>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
