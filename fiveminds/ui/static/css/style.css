@@ -2249,6 +2249,14 @@ a:hover {
     background: var(--bg-secondary);
 }
 
+.repo-btn.valid {
+    border-left: 3px solid var(--success-color);
+}
+
+.repo-btn.invalid {
+    border-left: 3px solid var(--warning-color);
+}
+
 .repo-icon {
     font-size: 1rem;
 }

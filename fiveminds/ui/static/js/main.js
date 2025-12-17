@@ -16,10 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
     updateFooterTime();
     setInterval(updateFooterTime, 1000);
     
-    // Load saved repo path
+    // Load saved repo path and validate it
     const savedRepo = localStorage.getItem('selectedRepoPath');
     if (savedRepo) {
-        setRepoPath(savedRepo);
+        validateAndSetRepoPath(savedRepo);
     }
 });
 
@@ -291,26 +291,63 @@ function initializeCommandBar() {
  * Select repository path
  */
 function selectRepo() {
-    // Prompt user for repository path (in a real app this would be a file picker)
-    const path = prompt('Enter the path to your local repository:', selectedRepoPath || '/path/to/repo');
+    // Prompt user for repository path
+    const path = prompt('Enter the path to your local repository:\n\nExample: /Users/you/projects/my-app', selectedRepoPath || '');
     
     if (path && path.trim()) {
-        setRepoPath(path.trim());
-        showNotification(`Repository set: ${path.trim()}`, 'success');
+        validateAndSetRepoPath(path.trim());
+    }
+}
+
+/**
+ * Validate and set repository path via server
+ */
+async function validateAndSetRepoPath(path) {
+    try {
+        const response = await fetch('/api/workspace', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: path })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            setRepoPath(path, true);
+            showNotification(`Workspace set: ${path}`, 'success');
+        } else {
+            showNotification(result.message || 'Invalid workspace path', 'error');
+            // Still set locally but mark as invalid
+            setRepoPath(path, false);
+        }
+    } catch (error) {
+        console.error('Error validating workspace:', error);
+        // Set locally anyway for offline use
+        setRepoPath(path, false);
     }
 }
 
 /**
  * Set the repository path
  */
-function setRepoPath(path) {
+function setRepoPath(path, valid = true) {
     selectedRepoPath = path;
     localStorage.setItem('selectedRepoPath', path);
     
     const repoPathEl = document.getElementById('repo-path');
+    const repoBtnEl = document.getElementById('repo-selector-btn');
+    
     if (repoPathEl) {
-        repoPathEl.textContent = path;
+        // Show shortened path if too long
+        const displayPath = path.length > 40 ? '...' + path.slice(-37) : path;
+        repoPathEl.textContent = displayPath;
         repoPathEl.classList.add('selected');
+        repoPathEl.title = path; // Show full path on hover
+    }
+    
+    if (repoBtnEl) {
+        repoBtnEl.classList.toggle('valid', valid);
+        repoBtnEl.classList.toggle('invalid', !valid);
     }
 }
 
