@@ -243,3 +243,174 @@ function formatDiff(diff) {
         return escapeHtml(line);
     }).join('\n');
 }
+
+/**
+ * Task Queue Management
+ */
+let taskQueue = [];
+
+/**
+ * Initialize floating chat input
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('objective-chat-form');
+    const autonomousToggle = document.getElementById('autonomous-mode-toggle');
+    
+    if (chatForm) {
+        chatForm.addEventListener('submit', handleObjectiveSubmit);
+    }
+    
+    if (autonomousToggle) {
+        autonomousToggle.addEventListener('change', handleAutonomousModeToggle);
+        
+        // Load saved state
+        const savedState = localStorage.getItem('autonomousMode');
+        if (savedState !== null) {
+            autonomousToggle.checked = savedState === 'true';
+        }
+    }
+});
+
+/**
+ * Handle objective submission from chat input
+ */
+async function handleObjectiveSubmit(event) {
+    event.preventDefault();
+    
+    const input = document.getElementById('objective-input');
+    const objective = input.value.trim();
+    
+    if (!objective) {
+        return;
+    }
+    
+    // Add to queue
+    taskQueue.push({
+        description: objective,
+        timestamp: new Date().toISOString(),
+        status: 'queued'
+    });
+    
+    // Clear input
+    input.value = '';
+    
+    // Update queue indicator
+    updateQueueIndicator();
+    
+    // If autonomous mode is enabled and system is idle, submit immediately
+    const autonomousMode = document.getElementById('autonomous-mode-toggle')?.checked;
+    const systemIdle = state.status === 'idle' || !state.status;
+    
+    if (autonomousMode && systemIdle && taskQueue.length === 1) {
+        submitNextTask();
+    } else {
+        // Show notification
+        showNotification(`Task "${objective}" added to queue (${taskQueue.length} tasks)`);
+    }
+}
+
+/**
+ * Submit the next task from queue
+ */
+async function submitNextTask() {
+    if (taskQueue.length === 0) {
+        return;
+    }
+    
+    const task = taskQueue[0];
+    task.status = 'submitting';
+    
+    try {
+        const response = await fetch('/api/objective', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: task.description,
+                requirements: [task.description],
+                constraints: [],
+                success_metrics: ["All acceptance criteria met", "All tests pass"]
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Remove from queue
+            taskQueue.shift();
+            updateQueueIndicator();
+            showNotification(`Task "${task.description}" started`);
+        } else {
+            task.status = 'failed';
+            showNotification(`Failed to submit task: ${result.message}`, 'error');
+        }
+    } catch (error) {
+        task.status = 'failed';
+        console.error('Error submitting task:', error);
+        showNotification(`Error submitting task: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Update task queue indicator
+ */
+function updateQueueIndicator() {
+    const indicator = document.getElementById('task-queue-indicator');
+    const countEl = document.getElementById('queue-count');
+    
+    if (indicator && countEl) {
+        if (taskQueue.length > 0) {
+            countEl.textContent = taskQueue.length;
+            indicator.style.display = 'block';
+        } else {
+            indicator.style.display = 'none';
+        }
+    }
+}
+
+/**
+ * Handle autonomous mode toggle
+ */
+function handleAutonomousModeToggle(event) {
+    const enabled = event.target.checked;
+    
+    // Save to localStorage
+    localStorage.setItem('autonomousMode', enabled);
+    
+    // Show notification
+    if (enabled) {
+        showNotification('🤖 Autonomous mode enabled - tasks will run automatically');
+        
+        // If there are queued tasks and system is idle, start processing
+        if (taskQueue.length > 0 && (state.status === 'idle' || !state.status)) {
+            submitNextTask();
+        }
+    } else {
+        showNotification('⏸️ Autonomous mode disabled - tasks will queue until manually started');
+    }
+}
+
+/**
+ * Show notification (simple implementation)
+ */
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // You can implement a toast notification system here
+    // For now, we'll just log to console
+}
+
+/**
+ * Listen for status changes to process queue
+ */
+socket?.on('status_update', function(status) {
+    // If system becomes idle and autonomous mode is on, process next task
+    const autonomousMode = document.getElementById('autonomous-mode-toggle')?.checked;
+    
+    if (status === 'idle' && autonomousMode && taskQueue.length > 0) {
+        setTimeout(() => {
+            submitNextTask();
+        }, 2000); // Wait 2 seconds before submitting next task
+    }
+});

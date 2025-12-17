@@ -244,6 +244,40 @@ class UIServer:
             
             self._emit_update("tickets_update", self._state["tickets"])
             return jsonify({"success": True, "message": "Follow-up ticket created"})
+        
+        @self.app.route('/api/objective', methods=['POST'])
+        def submit_objective():
+            """Submit a new objective."""
+            data = request.json
+            if not data:
+                return jsonify({"success": False, "message": "No data provided"}), 400
+            
+            # Validate objective data
+            if not data.get("description"):
+                return jsonify({"success": False, "message": "Objective description is required"}), 400
+            
+            # Store objective
+            objective = {
+                "description": data.get("description", ""),
+                "requirements": data.get("requirements", []),
+                "constraints": data.get("constraints", []),
+                "success_metrics": data.get("success_metrics", ["All acceptance criteria met", "All tests pass"])
+            }
+            
+            # Update state
+            with self._lock:
+                self._state["objective"] = objective
+                self._state["status"] = "analyzing"
+                self._state["start_time"] = datetime.now().isoformat()
+                self._add_progress("New objective submitted: " + objective["description"])
+            
+            # Emit updates
+            self._emit_update("objective_update", self._state["objective"])
+            self._emit_update("status_update", self._state["status"])
+            
+            logger.info(f"New objective submitted: {objective['description']}")
+            
+            return jsonify({"success": True, "message": "Objective submitted successfully"})
 
     def _setup_socketio_handlers(self):
         """Setup WebSocket handlers."""

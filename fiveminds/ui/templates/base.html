@@ -32,6 +32,10 @@
             </a>
         </div>
         <div class="nav-status">
+            <label class="autonomous-toggle">
+                <input type="checkbox" id="autonomous-mode-toggle" checked>
+                <span class="toggle-label">🤖 Autonomous Mode</span>
+            </label>
             <span id="connection-status" class="status-indicator disconnected">●</span>
             <span id="system-status">Disconnected</span>
         </div>
@@ -45,6 +49,25 @@
         <span>Five Minds v0.1.0</span>
         <span id="footer-time"></span>
     </footer>
+
+    <!-- Floating Chat Input -->
+    <div class="floating-chat-container">
+        <div class="task-queue-indicator" id="task-queue-indicator" style="display: none;">
+            <span id="queue-count">0</span> tasks in queue
+        </div>
+        <form id="objective-chat-form" class="objective-chat-form">
+            <input 
+                type="text" 
+                id="objective-input" 
+                class="objective-input" 
+                placeholder="Enter a new objective for HeadMaster..." 
+                autocomplete="off"
+            />
+            <button type="submit" class="send-btn" title="Send Objective">
+                <span class="send-icon">📤</span>
+            </button>
+        </form>
+    </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
