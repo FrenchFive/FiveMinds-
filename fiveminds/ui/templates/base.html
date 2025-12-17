@@ -19,28 +19,31 @@
         </div>
         <div class="nav-links">
             <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                <span class="nav-icon">📊</span> Dashboard
+                Dashboard
             </a>
             <a href="/runner" class="nav-link {% if '/runner' in request.path %}active{% endif %}">
-                <span class="nav-icon">🏃</span> Runners
+                Runners
             </a>
             <a href="/headmaster" class="nav-link {% if '/headmaster' in request.path %}active{% endif %}">
-                <span class="nav-icon">🎓</span> HeadMaster
+                HeadMaster
             </a>
             <a href="/review" class="nav-link {% if '/review' in request.path %}active{% endif %}">
-                <span class="nav-icon">🔍</span> Review
+                Review
             </a>
             <a href="/settings" class="nav-link {% if '/settings' in request.path %}active{% endif %}">
-                <span class="nav-icon">⚙️</span> Settings
+                Settings
             </a>
         </div>
         <div class="nav-status">
             <label class="autonomous-toggle">
                 <input type="checkbox" id="autonomous-mode-toggle" checked>
-                <span class="toggle-label">🤖 Autonomous Mode</span>
+                <span class="toggle-indicator"></span>
+                <span class="toggle-label">Autonomous</span>
             </label>
-            <span id="connection-status" class="status-indicator disconnected">●</span>
-            <span id="system-status">Disconnected</span>
+            <div class="connection-pill">
+                <span id="connection-status" class="status-indicator disconnected">●</span>
+                <span id="system-status">Disconnected</span>
+            </div>
         </div>
     </nav>
 

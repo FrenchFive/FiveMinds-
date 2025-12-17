@@ -4,19 +4,21 @@
 
 {% block content %}
 <div class="dashboard">
-    <!-- Top Header Bar - Current Task Title -->
+    <!-- Context Bar - Status indicator (smaller, calmer) -->
     <div class="top-header-bar">
         <div class="current-task-header">
             <div class="task-status-indicator">
-                <span id="task-status-dot" class="status-dot idle"></span>
+                <span class="status-pill">
+                    <span id="task-status-dot" class="status-dot idle"></span>
+                    <span id="status-text">Idle</span>
+                </span>
             </div>
             <div class="task-info">
-                <h1 id="current-task-title" class="current-task-title">Waiting for objective...</h1>
-                <p id="headmaster-action" class="headmaster-action">HeadMaster is idle</p>
+                <p id="headmaster-action" class="current-task-title">HeadMaster idle — waiting for objective</p>
             </div>
             <div class="task-controls">
-                <button id="stop-btn" class="btn btn-danger" style="display: none;">
-                    ⏹ Stop Execution
+                <button id="stop-btn" class="btn btn-danger btn-small" style="display: none;">
+                    Stop
                 </button>
             </div>
         </div>
@@ -25,28 +27,24 @@
     <!-- Stats Overview Row -->
     <div class="stats-overview">
         <div class="stat-box">
-            <div class="stat-icon">🎯</div>
             <div class="stat-content">
                 <span id="stat-status" class="stat-value">Idle</span>
                 <span class="stat-label">Status</span>
             </div>
         </div>
         <div class="stat-box">
-            <div class="stat-icon">🏃</div>
             <div class="stat-content">
                 <span id="stat-runners" class="stat-value">0</span>
-                <span class="stat-label">Active Runners</span>
+                <span class="stat-label">Active runners</span>
             </div>
         </div>
         <div class="stat-box">
-            <div class="stat-icon">🎫</div>
             <div class="stat-content">
                 <span id="stat-tickets" class="stat-value">0 / 0</span>
-                <span class="stat-label">Tickets Done</span>
+                <span class="stat-label">Tickets done</span>
             </div>
         </div>
         <div class="stat-box">
-            <div class="stat-icon">⏱️</div>
             <div class="stat-content">
                 <span id="stat-elapsed" class="stat-value">--:--</span>
                 <span class="stat-label">Elapsed</span>
@@ -61,12 +59,15 @@
             <!-- HeadMaster Activity -->
             <div class="card headmaster-card">
                 <div class="card-header">
-                    <h2><span class="icon">🎓</span> HeadMaster Activity</h2>
+                    <h2>HeadMaster activity</h2>
                     <span id="headmaster-status" class="status-badge idle">Idle</span>
                 </div>
                 <div class="card-body">
                     <div id="headmaster-reasoning" class="reasoning-log">
-                        <div class="reasoning-empty">HeadMaster is waiting for an objective...</div>
+                        <div class="reasoning-empty">
+                            <p>HeadMaster is idle.</p>
+                            <span class="empty-hint">Set an objective to begin planning.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,7 +75,7 @@
             <!-- Active Runners -->
             <div class="card runners-card">
                 <div class="card-header">
-                    <h2><span class="icon">🏃</span> Runners</h2>
+                    <h2>Runners</h2>
                     <span id="runners-count" class="badge">0 active</span>
                 </div>
                 <div class="card-body">
@@ -87,16 +88,19 @@
 
         <!-- Right Column: Objective & Progress -->
         <div class="right-column">
-            <!-- Current Objective -->
+            <!-- Current Objective - Primary Focus -->
             <div class="card objective-card">
                 <div class="card-header">
-                    <h2><span class="icon">🎯</span> Current Objective</h2>
+                    <h2>Current objective</h2>
                 </div>
                 <div class="card-body">
                     <p id="objective-description" class="objective-text">No objective set</p>
                     <div class="objective-meta">
-                        <span id="objective-requirements" class="meta-item">📋 0 requirements</span>
-                        <span id="objective-constraints" class="meta-item">⚠️ 0 constraints</span>
+                        <span id="objective-requirements" class="meta-item">0 requirements</span>
+                        <span id="objective-constraints" class="meta-item">0 constraints</span>
+                    </div>
+                    <div class="objective-cta" id="objective-cta">
+                        <button class="btn btn-primary" onclick="document.getElementById('objective-input').focus()">Set objective</button>
                     </div>
                 </div>
             </div>
@@ -104,7 +108,7 @@
             <!-- Progress Timeline -->
             <div class="card progress-card">
                 <div class="card-header">
-                    <h2><span class="icon">📊</span> Progress</h2>
+                    <h2>Progress</h2>
                     <span id="progress-count" class="badge">0 events</span>
                 </div>
                 <div class="card-body">
@@ -119,7 +123,7 @@
     <!-- Tickets Section -->
     <div class="tickets-section card">
         <div class="card-header">
-            <h2><span class="icon">🎫</span> Tickets</h2>
+            <h2>Tickets</h2>
             <div class="ticket-stats">
                 <span class="stat completed" id="tickets-completed">0 completed</span>
                 <span class="stat in-progress" id="tickets-in-progress">0 in progress</span>
@@ -138,7 +142,7 @@
     <div id="final-summary-section" class="final-summary-section" style="display: none;">
         <div class="card final-summary-card">
             <div class="card-header">
-                <h2><span class="icon">✅</span> Execution Complete</h2>
+                <h2>Execution complete</h2>
             </div>
             <div class="card-body">
                 <pre id="final-summary-content" class="final-summary-content"></pre>
