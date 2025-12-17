@@ -107,15 +107,16 @@ echo.
 goto end
 
 :run
-REM If no arguments provided, run in interactive mode with UI
+REM If no arguments provided, run in autonomous mode
 if not defined HAS_OBJECTIVE (
-    echo Starting Five Minds in interactive mode with UI...
+    echo Starting Five Minds in autonomous mode...
+    echo UI Dashboard will be available at http://127.0.0.1:5000
     echo.
-    python -m fiveminds.cli --interactive --ui
+    python -m fiveminds.cli --auto-discover
 ) else (
     echo Starting Five Minds...
     echo.
-    python -m fiveminds.cli --ui %ARGS%
+    python -m fiveminds.cli %ARGS%
 )
 
 if %ERRORLEVEL% NEQ 0 (

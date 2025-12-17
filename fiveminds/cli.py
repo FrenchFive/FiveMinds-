@@ -148,7 +148,15 @@ Examples:
     parser.add_argument(
         '--ui',
         action='store_true',
-        help='Enable web UI dashboard'
+        default=True,
+        help='Enable web UI dashboard (default: enabled, use --no-ui to disable)'
+    )
+    
+    parser.add_argument(
+        '--no-ui',
+        action='store_false',
+        dest='ui',
+        help='Disable web UI dashboard'
     )
     
     parser.add_argument(
@@ -187,6 +195,12 @@ Examples:
     )
     
     parser.add_argument(
+        '--auto-discover',
+        action='store_true',
+        help='Run in auto-discovery mode where HeadMaster autonomously finds tasks'
+    )
+    
+    parser.add_argument(
         '--user-name',
         type=str,
         default='FiveMinds',
@@ -212,15 +226,33 @@ Examples:
         return 1
     
     # Get objective
-    if args.interactive:
-        # If UI is explicitly enabled, get objective from UI
-        # Otherwise, use console interactive mode
-        if args.ui:
-            objective = None  # Will be set by UI callback
-        else:
-            objective = interactive_mode()
-            if objective is None:
-                return 1
+    if args.auto_discover:
+        # Auto-discovery mode: HeadMaster will analyze the repository and create tasks
+        objective = Objective(
+            description="Analyze repository and autonomously create improvement tasks",
+            requirements=[
+                "Analyze code quality and identify improvements",
+                "Search for TODO/FIXME comments and create tasks",
+                "Identify potential optimizations",
+                "Check for missing tests or documentation",
+                "Suggest new features based on existing patterns"
+            ],
+            constraints=[
+                "Maintain existing functionality",
+                "Follow project coding standards",
+                "Ensure backward compatibility"
+            ],
+            success_metrics=[
+                "Repository analysis complete",
+                "Improvement tasks identified and prioritized",
+                "Tasks can be executed by runners"
+            ]
+        )
+        print(f"\n🔍 Auto-Discovery Mode: HeadMaster will analyze repository and create tasks")
+    elif args.interactive:
+        objective = interactive_mode()
+        if objective is None:
+            return 1
     elif args.objective:
         objective = Objective(
             description=args.objective,
@@ -229,7 +261,7 @@ Examples:
             success_metrics=["All acceptance criteria met", "All tests pass"]
         )
     else:
-        print("Error: Please provide an objective or use --interactive mode", file=sys.stderr)
+        print("Error: Please provide an objective, use --interactive mode, or --auto-discover", file=sys.stderr)
         parser.print_help()
         return 1
     
@@ -237,13 +269,8 @@ Examples:
     print(f"\n🧠 Five Minds - Agentic AI Dev System")
     print(f"=" * 50)
     print(f"Repository: {repo_path}")
-    
-    if objective:
-        print(f"Objective: {objective.description}")
-        print(f"Requirements: {len(objective.requirements)}")
-    else:
-        print(f"Objective: Waiting for input from UI...")
-    
+    print(f"Objective: {objective.description}")
+    print(f"Requirements: {len(objective.requirements)}")
     print(f"Autonomous mode: {'Enabled' if args.autonomous else 'Disabled'}")
     
     if args.ui:
@@ -261,41 +288,6 @@ Examples:
         user_email=args.user_email,
         autonomous=args.autonomous
     )
-    
-    # If we're waiting for objective from UI, set up callback and wait
-    if objective is None and args.ui:
-        import threading
-        objective_received = threading.Event()
-        received_objective = [None]  # Use list to allow modification in closure
-        
-        def on_objective_submitted(obj_data):
-            """Callback when objective is submitted from UI."""
-            received_objective[0] = Objective(
-                description=obj_data["description"],
-                requirements=obj_data.get("requirements", [obj_data["description"]]),
-                constraints=obj_data.get("constraints", []),
-                success_metrics=obj_data.get("success_metrics", ["All acceptance criteria met", "All tests pass"])
-            )
-            objective_received.set()
-        
-        # Register callback
-        five_minds.ui_server.set_objective_callback(on_objective_submitted)
-        
-        # Start UI server
-        five_minds.ui_server.start(background=True)
-        
-        print(f"\n🌐 Waiting for objective submission from UI...")
-        print(f"📊 Open your browser to: http://{args.ui_host}:{args.ui_port}")
-        print(f"Press Ctrl+C to cancel\n")
-        
-        try:
-            # Wait for objective to be submitted
-            objective_received.wait()
-            objective = received_objective[0]
-            print(f"\n✓ Objective received from UI: {objective.description}\n")
-        except KeyboardInterrupt:
-            print("\n\nCancelled by user.")
-            return 0
     
     # Execute
     try:

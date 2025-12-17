@@ -5,22 +5,12 @@
 // Update interval for elapsed time
 let elapsedInterval = null;
 
-// Initialize stop button and welcome modal when page loads
+// Initialize stop button when page loads
 document.addEventListener('DOMContentLoaded', function() {
     const stopBtn = document.getElementById('stop-btn');
     if (stopBtn) {
         stopBtn.addEventListener('click', handleStopClick);
     }
-    
-    // Initialize objective form
-    const objectiveForm = document.getElementById('objective-form');
-    if (objectiveForm) {
-        objectiveForm.addEventListener('submit', handleObjectiveSubmit);
-    }
-    
-    // Show welcome modal initially if no objective
-    // Will be hidden when state update shows objective exists
-    showWelcomeModal();
 });
 
 /**
@@ -279,11 +269,6 @@ function onObjectiveUpdate(objective) {
     const constEl = document.getElementById('objective-constraints');
     const taskTitle = document.getElementById('current-task-title');
     
-    // Hide welcome modal when objective is set
-    if (objective && objective.description) {
-        hideWelcomeModal();
-    }
-    
     if (descEl) {
         descEl.textContent = objective.description || 'No objective set';
     }
@@ -534,98 +519,4 @@ function updateTicketStats(tickets) {
     if (inProgressEl) inProgressEl.textContent = `${inProgress} in progress`;
     if (pendingEl) pendingEl.textContent = `${pending} pending`;
     if (failedEl) failedEl.textContent = `${failed} failed`;
-}
-
-/**
- * Show welcome modal
- */
-function showWelcomeModal() {
-    const modal = document.getElementById('welcome-modal');
-    if (modal) {
-        modal.classList.add('active');
-    }
-}
-
-/**
- * Hide welcome modal
- */
-function hideWelcomeModal() {
-    const modal = document.getElementById('welcome-modal');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
-
-/**
- * Handle objective form submission
- */
-async function handleObjectiveSubmit(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const description = form.description.value.trim();
-    
-    if (!description) {
-        alert('Objective Required: Please describe what you want to accomplish in the "What do you want to accomplish?" field.');
-        return;
-    }
-    
-    // Parse requirements (one per line, filter empty lines)
-    const requirementsText = form.requirements.value.trim();
-    const requirements = requirementsText 
-        ? requirementsText.split('\n').map(r => r.trim()).filter(r => r)
-        : [description]; // Use description as default requirement if none provided
-    
-    // Parse constraints (one per line, filter empty lines)
-    const constraintsText = form.constraints.value.trim();
-    const constraints = constraintsText
-        ? constraintsText.split('\n').map(c => c.trim()).filter(c => c)
-        : [];
-    
-    const objectiveData = {
-        description,
-        requirements,
-        constraints,
-        success_metrics: ["All acceptance criteria met", "All tests pass"]
-    };
-    
-    // Get submit button once
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    try {
-        // Disable submit button
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Starting...';
-        
-        // Submit objective
-        const response = await fetch('/api/objective', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(objectiveData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            // Hide modal
-            hideWelcomeModal();
-            console.log('Objective submitted successfully');
-        } else {
-            const errorMsg = result.message || 'Failed to submit objective. Please try again.';
-            alert('Submission Failed: ' + errorMsg + '\n\nPlease check your input and try again.');
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
-    } catch (error) {
-        console.error('Error submitting objective:', error);
-        const errorMsg = error.message || 'Unknown error occurred';
-        alert('Connection Error: Unable to submit your objective.\n\n' + 
-              'Details: ' + errorMsg + '\n\n' +
-              'Please check that the server is running and try again.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
 }
